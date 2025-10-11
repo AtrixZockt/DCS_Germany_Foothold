@@ -140,14 +140,23 @@ function DynamicTasking:GenerateCaptureMission(zone)
 end
 
 --- Creates a new player-joinable A2A mission.
-function DynamicTasking:GenerateA2AMission(groupName)
+function DynamicTasking:GenerateA2AMission(contact)
     if #self.ActiveMissions >= self.Config.MaxMissions then return end
+    local groupName = contact.groupname
     local enemyGroup = GROUP:FindByName(groupName)
     if not enemyGroup or not enemyGroup:IsAlive() then return end
     enemyGroup:HandleEvent( EVENTS.Crash, self.A2AMissionEventCrashOrDead )
     enemyGroup:HandleEvent( EVENTS.UnitLost, self.A2AMissionEventCrashOrDead )
     enemyGroup:HandleEvent( EVENTS.RemoveUnit, self.A2AMissionEventCrashOrDead )
-    self:CreateMission("INTERCEPT", enemyGroup, "Intercept and destroy "..groupName, self.Config.XP_INTERCEPT, enemyGroup:GetSize())
+    enemyGroup:HandleEvent( EVENTS.Land, self.A2AMissionEventCrashOrDead )
+    enemyGroup:HandleEvent( EVENTS.Dead, self.A2AMissionEventCrashOrDead )
+    
+    self:CreateMission("INTERCEPT", enemyGroup, "Intercept and destroy "..contact.platform.. " (" ..contact.typename.. ")", self.Config.XP_INTERCEPT, enemyGroup:GetSize())
+    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired before: " ..enemyGroup)
+end
+
+function DynamicTasking:A2AMissionEventCrashOrDead(eventData)
+    env.info(string.format("DynamicTasking:A2AMissionEventCrashOrDead - Event fired: TgtGroup: %s, TgtUnit: %s, TgtGroupName: %s", eventData.TgtGroup, eventData.TgtUnit, eventData.TgtGroupName))
 end
 
 --- Creates a new player-joinable Runway Attack mission.
@@ -200,10 +209,6 @@ function DynamicTasking:GenerateRunwayAttackMission(airbaseName, requiredHits)
 
     self:CreateMission("RUNWAY", runway, "Destroy runway " .. runway.name .. " at " .. airbaseName, self.Config.XP_RUNWAY, requiredHits or 3, airbaseName)
     return true -- Mission successfully created
-end
-
-function DynamicTasking:A2AMissionEventCrashOrDead(eventData)
-    env.info(string.format("DynamicTasking:A2AMissionEventCrashOrDead - Event fired: TgtGroup: %s, TgtUnit: %s, TgtGroupName: %s", EventData.TgtGroup, EventData.TgtUnit, EventData.TgtGroupName))
 end
 
 --- Generic internal mission creation function.

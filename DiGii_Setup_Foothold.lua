@@ -207,7 +207,9 @@ zones.Laubach_FARP.airbaseName = 'Laubach FARP'
 -- Groups
 zones.Hamburg:addGroups({
 	GroupCommander:new({name='Hamburg-Supply-Hamburg_Farp-Blue', mission='supply', targetzone='Hamburg_FARP'}),
-	GroupCommander:new({name='Hamburg-Supply-Luneburg-Blue', mission='supply', targetzone='Luneburg'})
+	GroupCommander:new({name='Hamburg-Supply-Luneburg-Blue', mission='supply', targetzone='Luneburg'}),
+	GroupCommander:new({name='Hamburg-patrol-Luneburg-Blue', mission='patrol', MissionType='CAP', targetzone='Luneburg', urgent = true}),
+	GroupCommander:new({name='Hamburg-patrol-Bremen-Blue', mission='patrol', MissionType='CAP', targetzone='Hamburg_FARP', urgent = true})
 })
 zones.Hamburg_FARP:addGroups({
 	GroupCommander:new({name='Hamburg_Farp-Supply-Luneburg-Blue', mission= 'supply', targetzone='Luneburg'}),
@@ -227,7 +229,9 @@ zones.Bremen:addGroups({
 	GroupCommander:new({name='Bremen-supply-rotenburg_farp', mission='supply', targetzone='Rotenburg Farp'}),
 	GroupCommander:new({name='Bremen-partol-Rotenburg_Farp', mission='patrol', MissionType='CAP', targetzone='Rotenburg_Farp'}),
 	GroupCommander:new({name='Bremen-partol-Hannover', mission='patrol', MissionType='CAP', targetzone='Hannover'}),
-	GroupCommander:new({name='Bremen-Supply-Hannover-blue', mission='supply', targetzone='Hannover'})
+	GroupCommander:new({name='Bremen-Supply-Hannover-blue', mission='supply', targetzone='Hannover'}),
+	GroupCommander:new({name='Bremen-partol-Fassburg_blue', mission='patrol', MissionType='CAP', targetzone='Luneburg'}),
+	GroupCommander:new({name='Bremen-partol-Hannover_blue-1', mission='patrol', MissionType='CAP', targetzone='Hannover'})
 })
 zones.Fassberg:addGroups({
 	GroupCommander:new({name='Fassberg-supply-Bremen', mission='supply', targetzone='Bremen'}),
@@ -1055,7 +1059,6 @@ function generateAttackMission()
             local targetAirbaseName = validRunwayTargets[math.random(1, #validRunwayTargets)]
             -- The GenerateRunwayAttackMission function now handles the logic to prevent duplicates.
             if DynamicTasking:GenerateRunwayAttackMission(targetAirbaseName, 3) then
-                trigger.action.outText("New Runway Attack Mission available: Target " .. targetAirbaseName, 15)
                 missionGenerated = true
             end
         end

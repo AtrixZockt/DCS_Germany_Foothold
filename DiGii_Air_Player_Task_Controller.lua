@@ -13,5 +13,5 @@ BlueIntel:__Start(2)
 
 
 function BlueIntel:OnAfterNewContact(From, Event, To, Contact)
-  DynamicTasking:GenerateA2AMission(Contact.groupname)
+  DynamicTasking:GenerateA2AMission(Contact)
 end
