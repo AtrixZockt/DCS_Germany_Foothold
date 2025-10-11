@@ -990,7 +990,7 @@ mc = MissionCommander:new({side = 2, battleCommander = bc, checkFrequency = 60})
 
 function generateAttackMission()
     if missionCompleted then return end
-
+    
     local validzones = {}
     for _, v in ipairs(bc.connections) do
         local to = bc:getZoneByName(v.to)
@@ -1034,8 +1034,6 @@ function generateAttackMission()
             end
         end
 
-		env.info("SETUP_FOOTHOLD: Found " .. #frontlineZones .. " frontline zones")
-
         -- Only proceed if we have a frontline
         if #frontlineZones > 0 then
             -- Filter runway candidates to be RED controlled and near the frontline
@@ -1055,6 +1053,7 @@ function generateAttackMission()
 
         if #validRunwayTargets > 0 then
             local targetAirbaseName = validRunwayTargets[math.random(1, #validRunwayTargets)]
+            -- The GenerateRunwayAttackMission function now handles the logic to prevent duplicates.
             if DynamicTasking:GenerateRunwayAttackMission(targetAirbaseName, 3) then
                 trigger.action.outText("New Runway Attack Mission available: Target " .. targetAirbaseName, 15)
                 missionGenerated = true

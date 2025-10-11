@@ -152,6 +152,29 @@ end
 
 --- Creates a new player-joinable Runway Attack mission.
 function DynamicTasking:GenerateRunwayAttackMission(airbaseName, requiredHits)
+    -- Check constraints before creating the mission
+    local runwayMissionCount = 0
+    local isTargetAlreadyActive = false
+    for code, mission in pairs(self.ActiveMissions) do
+        if mission.type == "RUNWAY" then
+            runwayMissionCount = runwayMissionCount + 1
+            if mission.zoneName == airbaseName then
+                isTargetAlreadyActive = true
+                break
+            end
+        end
+    end
+
+    if runwayMissionCount >= 2 then
+        env.info("DynamicTasking: Max runway missions (2) already active. Cannot create new one.")
+        return false
+    end
+
+    if isTargetAlreadyActive then
+        env.info("DynamicTasking: Runway mission for " .. airbaseName .. " already exists. Cannot create duplicate.")
+        return false
+    end
+
     if #self.ActiveMissions >= self.Config.MaxMissions then return end
     local airbase = AIRBASE:FindByName(airbaseName)
     if not airbase then
@@ -176,6 +199,7 @@ function DynamicTasking:GenerateRunwayAttackMission(airbaseName, requiredHits)
     env.info("DynamicTasking:GenerateRunwayAttackMission - Runway found: " ..runway.zone:GetName().. " Runway name: " ..runway.name)
 
     self:CreateMission("RUNWAY", runway, "Destroy runway " .. runway.name .. " at " .. airbaseName, self.Config.XP_RUNWAY, requiredHits or 3, airbaseName)
+    return true -- Mission successfully created
 end
 
 function DynamicTasking:A2AMissionEventCrashOrDead(eventData)
@@ -370,7 +394,7 @@ function DynamicTasking:MissionMonitor()
             isComplete = true
             env.info(string.format("DynamicTasking:MissionMonitor - RUNWAY Mission %s progress: %d/%d hits.", mission.joinCode, (mission.bombHits or 0), mission.requiredKills))
         
-        elseif mission.type ~= "CAS" and mission.type ~= "CAPTURE" and (not mission.targetObject or not mission.targetObject:IsAlive()) then
+        elseif mission.type ~= "CAS" and mission.type ~= "CAPTURE" and mission.type ~= "RUNWAY" and (not mission.targetObject or not mission.targetObject:IsAlive()) then
             isComplete = true
             objectiveMet = not mission.targetObject -- if targetObject is nil, it's a failure.
             local targetName = mission.targetObject and mission.targetObject:GetName() or "N/A"
