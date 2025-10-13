@@ -25,7 +25,7 @@ end
 upgrades = {
     test = {
 		blue = {'blueInfantry', 'blueArmor'},
-		red = {'redInfantry1', 'Red Tanks', 'Red armoured group 1', 'Red SAM SHORAD SA-19', 'Red SAM SHORAD SA-15'}
+		red = {'redInfantry1', 'Red Tanks', 'Red armoured group 1', 'Red SAM SHORAD SA-19'}
 	},
 	hamburg = {
 		blue = {'BLUE EWR HAMBURG FIXED', 'blueInfantry', 'blueArmor', 'BLUE SAM HAWK HAMBURG', 'BLUE SAM MASAMS HAMBURG'},
@@ -33,39 +33,39 @@ upgrades = {
 	},
 	airfield1 = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD1'},
-		red = {'redInfantry1', 'Red SAM AAA', 'Red SAM AAA group 2', 'Red armoured group 2', 'Red armoured group 3', 'Red SAM SHORAD SA-19', 'Red SAM SHORAD SA-19 group 2', 'Red SAM SHORAD SA-8', 'Red SAM SHORAD SA-8 group 2'}
+		red = {'redInfantry1', 'Red SAM AAA', 'Red SAM AAA group 2', 'Red armoured group 2', 'Red armoured group 3', 'Red SAM SHORAD SA-19', 'Red SAM SHORAD SA-19 group 2'}
 	},
 	airfield2 = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD1'},
-		red = {'redInfantry1', 'Red SAM AAA', 'Red SAM AAA group 2', 'Red armoured group 2', 'Red armoured group 3', 'Red SAM SHORAD SA-15', 'Red SAM SHORAD SA-15 group 2', 'Red SAM SHORAD SA-8'}
+		red = {'redInfantry1', 'Red SAM AAA', 'Red SAM AAA group 2', 'Red armoured group 2', 'Red armoured group 3'}
 	},
 	airfield3 = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD2'},
-		red = {'redInfantry2', 'Red Tanks', 'Red armoured group 1', 'Red SAM AAA', 'Red SAM SHORAD SA-19', 'Red SAM SHORAD SA-15', 'Red SAM SHORAD SA-15 group 2'}
+		red = {'redInfantry2', 'Red Tanks', 'Red armoured group 1', 'Red SAM AAA', 'Red SAM SHORAD SA-19'}
 	},
 	airfield4 = {
 		blue = {'blueInfantry','blueArmor', 'bluePD2'},
-		red = {'redInfantry2', 'Red SAM AAA', 'Red SAM AAA group 2', 'Red armoured group 2', 'Red armoured group 3', 'Red SAM SHORAD SA-15', 'Red SAM SHORAD SA-8', 'Red SAM SHORAD SA-8 group 2'}
+		red = {'redInfantry2', 'Red SAM AAA', 'Red SAM AAA group 2', 'Red armoured group 2', 'Red armoured group 3'}
 	},
 	Frankfurt = {
 		blue = {'blueInfantry','blueArmor', 'bluePD2'},
-		red = {'RED SA11 FRANKFURT FIXED', 'RED Armoured-1 FRANKFURT FIXED', 'RED AA FRANKFURT FIXED', 'RED EWR FRANKFURT FIXED', 'RED INF FRANKFURT FIXED-1', 'RED Bunker FRANKFURT FIXED', 'RED Armoured-2 FRANKFURT FIXED', 'Red Tanks', 'Red SAM AAA'}
+		red = {'Red SAM SA-2 Frankfurt', 'RED Armoured-1 FRANKFURT FIXED', 'RED AA FRANKFURT FIXED', 'RED EWR FRANKFURT FIXED', 'RED INF FRANKFURT FIXED-1', 'RED Bunker FRANKFURT FIXED', 'RED Armoured-2 FRANKFURT FIXED', 'Red Tanks', 'Red SAM AAA'}
 	},
 	farp1 = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD1'},
-		red = {'redInfantry1','Red Tanks', 'Red armoured group 1','Red SAM AAA','Red SAM SHORAD SA-19', 'Red SAM SHORAD SA-8', 'Red SAM AAA group 2'}
+		red = {'redInfantry1','Red Tanks', 'Red armoured group 1','Red SAM AAA','Red SAM SHORAD SA-19', 'Red SAM AAA group 2'}
 	},
 	farp2 = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD1'},
-		red = {'redInfantry1', 'Red Tanks', 'Red armoured group 1', 'Red SAM SHORAD SA-19', 'Red SAM SHORAD SA-8', 'Red SAM SHORAD SA-8 group 2', 'Red SAM SHORAD SA-15'}
+		red = {'redInfantry1', 'Red Tanks', 'Red armoured group 1', 'Red SAM SHORAD SA-19'}
 	},
 	farp3 = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD1'},
-		red = {'Red Tanks', 'Red armoured group 1', 'Red armoured group 2', 'Red armoured group 3', 'Red SAM SHORAD SA-15', 'Red SAM SHORAD SA-15 group 2'}
+		red = {'Red Tanks', 'Red armoured group 1', 'Red armoured group 2', 'Red armoured group 3'}
 	},
 	farp4 = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD2'},
-		red = {'redInfantry2', 'Red armoured group 2', 'Red armoured group 3', 'Red SAM SHORAD SA-8', 'Red SAM SHORAD SA-8 group 2'}
+		red = {'redInfantry2', 'Red armoured group 2', 'Red armoured group 3'}
 	},
 	QuarryFixed = {
 		blue = {'blueInfantry', 'blueArmor', 'bluePD2'},
@@ -73,7 +73,7 @@ upgrades = {
 	},
 	SAMLiebenau = {
 		blue = {},
-		red = {'Red SAM SA11 Liebenau', 'Red SAM SA15 Liebenau'}
+		red = {'Red SAM SA-2 Liebenau', 'Red SAM AAA Liebenau'}
 	},
 	SAMPadaborn = {
 		blue = {},
@@ -208,8 +208,9 @@ zones.Laubach_FARP.airbaseName = 'Laubach FARP'
 zones.Hamburg:addGroups({
 	GroupCommander:new({name='Hamburg-Supply-Hamburg_Farp-Blue', mission='supply', targetzone='Hamburg_FARP'}),
 	GroupCommander:new({name='Hamburg-Supply-Luneburg-Blue', mission='supply', targetzone='Luneburg'}),
-	GroupCommander:new({name='Hamburg-patrol-Luneburg-Blue', mission='patrol', MissionType='CAP', targetzone='Luneburg', urgent = true}),
-	GroupCommander:new({name='Hamburg-patrol-Bremen-Blue', mission='patrol', MissionType='CAP', targetzone='Hamburg_FARP', urgent = true})
+	GroupCommander:new({name='Hamburg-patrol-Luneburg-Blue-Test', mission='patrol', MissionType='CAP', targetzone='Luneburg', urgent = true}),
+	GroupCommander:new({name='Hamburg-patrol-Bremen-Blue', mission='attack', MissionType='CAP', targetzone='Bremen', urgent = true}),
+	GroupCommander:new({name='Hamburg-attack-Luneburg-Blue', mission='attack', targetzone='Luneburg', urgent = zones.Luneburg.side == 1}),
 })
 zones.Hamburg_FARP:addGroups({
 	GroupCommander:new({name='Hamburg_Farp-Supply-Luneburg-Blue', mission= 'supply', targetzone='Luneburg'}),
@@ -227,7 +228,7 @@ zones.Luneburg:addGroups({
 zones.Bremen:addGroups({
 	GroupCommander:new({name='Bremen-attack-rotenburg_farp', mission='attack', targetzone='Rotenburg Farp'}),
 	GroupCommander:new({name='Bremen-supply-rotenburg_farp', mission='supply', targetzone='Rotenburg Farp'}),
-	GroupCommander:new({name='Bremen-partol-Rotenburg_Farp', mission='patrol', MissionType='CAP', targetzone='Rotenburg_Farp'}),
+	GroupCommander:new({name='Bremen-partol-Rotenburg_Farp', mission='attack', MissionType='CAP', targetzone='Rotenburg_Farp'}),
 	GroupCommander:new({name='Bremen-partol-Hannover', mission='patrol', MissionType='CAP', targetzone='Hannover'}),
 	GroupCommander:new({name='Bremen-Supply-Hannover-blue', mission='supply', targetzone='Hannover'}),
 	GroupCommander:new({name='Bremen-partol-Fassburg_blue', mission='patrol', MissionType='CAP', targetzone='Luneburg'}),
@@ -438,9 +439,7 @@ mist.scheduleFunction(function()
 		"Red SAM AAA group 2 #",
 		"Red armoured group 3 #",
 		"Red Tanks #",
-		"Red SAM SHORAD SA-15 #",
-		"Red SAM SHORAD SA-19 #",
-		"Red SAM SHORAD SA-8 #"
+		"Red SAM SHORAD SA-19 #"
 	}, 50)
 end, {}, timer.getTime() + 30)
 
