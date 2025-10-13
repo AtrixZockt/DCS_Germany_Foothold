@@ -44,9 +44,9 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
     if not zoneObject then return end
 
     local enemyGroupsInZone = SET_GROUP:New():FilterZones({zoneObject}):FilterCoalitions("red"):FilterOnce()
-    
+
     local sead_pool, cas_pool, strike_pool_groups = {}, {}, {}
-    
+
     if enemyGroupsInZone:Count() > 0 then
         enemyGroupsInZone:ForEach(function(group)
             -- Check if the group itself is assigned (for SEAD/STRIKE)
@@ -100,7 +100,7 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
         local targetGroup = strike_pool_groups[math.random(1, #strike_pool_groups)]
         self:CreateMission("STRIKE", targetGroup, "Destroy "..targetGroup:GetUnit(1):GetTypeName().." in "..zone.zone, self.Config.XP_STRIKE, targetGroup:GetSize(), zone.zone)
     end
-    
+
     if #strike_pool_statics > 0 and #self.ActiveMissions < self.Config.MaxMissions then
         local targetStatic = strike_pool_statics[math.random(1, #strike_pool_statics)]
         self:CreateMission("STRIKE", targetStatic, "Destroy "..targetStatic:GetTypeName().." in "..zone.zone, self.Config.XP_STRIKE, 1, zone.zone)
@@ -150,9 +150,9 @@ function DynamicTasking:GenerateA2AMission(contact)
     enemyGroup:HandleEvent( EVENTS.RemoveUnit, self.A2AMissionEventCrashOrDead )
     enemyGroup:HandleEvent( EVENTS.Land, self.A2AMissionEventCrashOrDead )
     enemyGroup:HandleEvent( EVENTS.Dead, self.A2AMissionEventCrashOrDead )
-    
+
     self:CreateMission("INTERCEPT", enemyGroup, "Intercept and destroy "..contact.platform.. " (" ..contact.typename.. ")", self.Config.XP_INTERCEPT, enemyGroup:GetSize())
-    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired before: " ..enemyGroup)
+    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired before: " ..groupName)
 end
 
 function DynamicTasking:A2AMissionEventCrashOrDead(eventData)
@@ -483,6 +483,7 @@ function DynamicTasking:DisplayMissionList(playerGroup, missionType)
             table.insert(messageParts, string.format("TASK: %s\n", mission.type))
             table.insert(messageParts, string.format("Zone: %s\n", mission.zoneName))
             table.insert(messageParts, string.format("Description:\n  %s\n", mission.description))
+            table.insert(messageParts, string.format("Reward: %s XP", mission.xpValue))
             table.insert(messageParts, string.format("Assigned Players: %s\n", playersString))
         end
     end
@@ -529,6 +530,7 @@ function DynamicTasking:DisplayCurrentMission(playerGroup)
         table.insert(messageParts, string.format("TASK: %s\n", foundMission.type))
         table.insert(messageParts, string.format("Zone: %s\n", foundMission.zoneName))
         table.insert(messageParts, string.format("Description:\n  %s\n", foundMission.description))
+        table.insert(messageParts, string.format("Reward: %s XP", foundMission.xpValue))
         
         -- Add progress display based on mission type
         if foundMission.type == "CAS" then
@@ -690,10 +692,59 @@ function DynamicTasking:BuildRadioMenuForGroup(groupName)
     end
     
     -- 4. Create the "Join" menu as before.
-    local joinMissionMenu = MENU_GROUP:New(playerGroup, "Join Active Mission", mainMenu)
-    local hasMissionsToJoin = false
+    local joinMissionMenu = MENU_GROUP:New(playerGroup, "Join Active Mission", mainMenu)    
+    self.GroupMenus[groupID].joinMenu = joinMissionMenu -- Store a reference to the join menu
+
+    self:BuildJoinMissionPage(groupName, page)
+
+    -- 5. Add the "My Current Mission" command.
+    MENU_GROUP_COMMAND:New(playerGroup, "My Current Mission", mainMenu, function() self:DisplayCurrentMission(playerGroup) end)
+
+    -- 6. Add "Leave Mission" command if player is assigned to one
+    local unitObject = playerGroup:GetUnit(1)
+    if unitObject and unitObject:IsAlive() then
+        local playerName = unitObject:GetPlayerName()
+        if self.PlayerAssignments then env.info("LEAVE MISSION: player assignment: " ..tostring(self.PlayerAssignments[playerName])) end
+        if playerName and self.PlayerAssignments and self.PlayerAssignments[playerName] then -- Check if self.PlayerAssignments is not nil
+            MENU_GROUP_COMMAND:New(playerGroup, "Leave Current Mission", mainMenu, function() self:LeaveMission(playerName, unitObject) end)
+        end
+    else
+        if not unitObject then env.info("LEAVE MISSION: UnitObj is nil") end
+        if unitObject then env.info("LEAVE MISSION: is unit alive: " ..unitObject:IsAlive()) end
+    end
+end
+
+--- Builds a specific page of the "Join Active Mission" menu.
+function DynamicTasking:BuildJoinMissionPage(groupName, page)
+
+    -- If page is not provided, default to 1. This handles external calls that are not aware of pagination.
+    page = page or 1
+
+    local playerGroup = GROUP:FindByName(groupName)
+    if not playerGroup or playerGroup:GetSize() == 0 then return end
+    local groupID = playerGroup:GetID()
+    local joinMissionMenu = self.GroupMenus[groupID] and self.GroupMenus[groupID].joinMenu
+
+    if not joinMissionMenu then return end
+
+    -- Clear only the contents of the join menu
+    joinMissionMenu:RemoveSubMenus()
+    self.GroupMenus[groupID].joinPage = page -- Store current page
+
+    -- Convert missions to a sorted array for consistent paging
+    local missionList = {}
     for code, mission in pairs(self.ActiveMissions) do
-        hasMissionsToJoin = true
+        table.insert(missionList, mission)
+    end
+    table.sort(missionList, function(a, b) return a.joinCode < b.joinCode end)
+
+    local missionsPerPage = 8 -- 8 missions + 2 navigation controls = 10 items
+    local startIndex = (page - 1) * missionsPerPage + 1
+    local endIndex = startIndex + missionsPerPage - 1
+    local totalMissions = #missionList
+
+    for i = startIndex, math.min(endIndex, totalMissions) do
+        local mission = missionList[i]
         local menuText = string.format("[%s - %s] %s", mission.type, mission.joinCode, mission.description)
         local action = function()
             local unitObject = playerGroup:GetUnit(1)
@@ -703,27 +754,24 @@ function DynamicTasking:BuildRadioMenuForGroup(groupName)
                 self:JoinMission(playerName, unitObject, mission)
             end
         end
-        MENU_GROUP_COMMAND:New(playerGroup, menuText, joinMissionMenu, action)
+        MENU_GROUP_COMMAND:New(playerGroup, menuText, joinMissionMenu, action)    
     end
-    if not hasMissionsToJoin then
-        MENU_GROUP:New(playerGroup, "No missions currently available to join.", joinMissionMenu)
-    end
-    
-    -- 5. Add the "My Current Mission" command.
-    MENU_GROUP_COMMAND:New(playerGroup, "My Current Mission", mainMenu, function() self:DisplayCurrentMission(playerGroup) end)
 
-    -- 6. Add "Leave Mission" command if player is assigned to one
-    local unitObject = playerGroup:GetUnit(1)
-    if unitObject and unitObject:IsAlive() then
-        local playerName = unitObject:GetPlayerName()
-        if self.PlayerAssignments then env.info("LEAVE MISSION: player assignment: " ..tostring(self.PlayerAssignments[playerName])) end
-        if playerName and self.PlayerAssignments and self.PlayerAssignments[playerName] then
-            MENU_GROUP_COMMAND:New(playerGroup, "Leave Current Mission", mainMenu, function() self:LeaveMission(playerName, unitObject) end)
-        end
-    else
-        if not unitObject then env.info("LEAVE MISSION: UnitObj is nil") end
-        if unitObject then env.info("LEAVE MISSION: is unit alive: " ..unitObject:IsAlive()) end
+    -- Add pagination controls
+    if page > 1 then
+        MENU_GROUP_COMMAND:New(playerGroup, "< Previous Page", joinMissionMenu, function() self:BuildJoinMissionPage(groupName, page - 1) end)
     end
+
+    if endIndex < totalMissions then
+        MENU_GROUP_COMMAND:New(playerGroup, "Next Page >", joinMissionMenu, function() self:BuildJoinMissionPage(groupName, page + 1) end)
+    end
+
+    if totalMissions == 0 then
+        MENU_GROUP_COMMAND:New(playerGroup, "No missions currently available to join.", joinMissionMenu, function() end)
+    end
+
+    -- 5. Add the "My Current Mission" command.
+    -- This is now part of the main BuildRadioMenuForGroup function
 end
 
 --- Automatically refreshes menus for all active players by rebuilding them.
@@ -758,6 +806,25 @@ function DynamicTasking:UpdateAllPlayerMenus()
         self:BuildRadioMenuForGroup(groupName)
     end
 end
+
+-- This block is now part of the main BuildRadioMenuForGroup function
+-- 5. Add the "My Current Mission" command.
+-- MENU_GROUP_COMMAND:New(playerGroup, "My Current Mission", mainMenu, function() self:DisplayCurrentMission(playerGroup) end)
+
+-- 6. Add "Leave Mission" command if player is assigned to one
+-- local unitObject = playerGroup:GetUnit(1)
+-- if unitObject and unitObject:IsAlive() then
+--     local playerName = unitObject:GetPlayerName()
+--     if self.PlayerAssignments then env.info("LEAVE MISSION: player assignment: " ..tostring(self.PlayerAssignments[playerName])) end
+--     if playerName and self.PlayerAssignments and self.PlayerAssignments[playerName] then -- Check if self.PlayerAssignments is not nil
+--         MENU_GROUP_COMMAND:New(playerGroup, "Leave Current Mission", mainMenu, function() self:LeaveMission(playerName, unitObject) end)
+--     end
+-- else
+--     if not unitObject then env.info("LEAVE MISSION: UnitObj is nil") end
+--     if unitObject then env.info("LEAVE MISSION: is unit alive: " ..unitObject:IsAlive()) end
+-- end
+
+
 
 --- Event handler for player leaving unit, to clear their mission assignment.
 function DynamicTasking:OnPlayerLeaveUnit(event)
