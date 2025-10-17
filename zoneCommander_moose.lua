@@ -6084,13 +6084,8 @@ end
 			end
 		end
 
-		--group:getController():setTask(mis)
-		--self:setDefaultAG(group)
-		
-		SCHEDULER:NewOnce(60, function()
-			group:getController():setTask(mis)
-			self:setDefaultAG(group)
-		end)
+		group:getController():setTask(mis)
+		self:setDefaultAG(group)
 
 	end
 
@@ -10787,56 +10782,6 @@ function GroupCommander:_getAirTemplate(resolved)
 	return tpl
 end
 
-function GroupCommander:_TestAssignTask(groupName, originZone)
-	if self.MissionType == 'CAP' and self.mission== 'patrol' then
-		local gr = Group.getByName(groupName); if not gr then return end
-		local side = self.side
-		local offsetNm = (side == 1) and math.random(10, 20) or math.random(1, 5)
-		local towardEnemyNm = 40
-		local off = (self.side == 2) and -towardEnemyNm or towardEnemyNm
-		local safe = (self.side == 2) and 35 or 40
-		local st = Frontline.PickStationNearZone(self.targetzone, self.side, off, 0, 0, 0, safe)
-		if not st then return end
-		local dist = (side == 1) and math.random(30, 35) or math.random(30, 40)
-		SetUpCAP(gr, { x = st.x, z = st.y }, self.Altitude, dist, self._landUnitID, 35, side)
-
-	elseif self.MissionType == 'CAP' and self.mission== 'attack' then
-		local gr = Group.getByName(groupName); if not gr then return end
-		local side = self.side
-		local offsetNm = (side == 1) and math.random(10, 20) or math.random(1, 5)
-		local st = Frontline.PickCapStationFromOrigin(originZone, self.targetzone, side, 100, 35)
-		if not st then return end
-		local dist = (side == 1) and math.random(30, 35) or math.random(30, 40)
-		SetUpCAP(gr, { x = st.x, z = st.y }, self.Altitude, dist, self._landUnitID, 35, side)
-
-	elseif self.mission == 'supply' and self.unitCategory == heli then
-		if self.side == 2 and self._pendingBlueSupplyCost then
-			self.zoneCommander.battleCommander.accounts[2] = math.max((self.zoneCommander.battleCommander.accounts[2] or 0) - self._pendingBlueSupplyCost, 0)
-			self._pendingBlueSupplyCost = nil end
-		self:_assignHeloRoute(groupName, self.targetzone)
-
-	elseif self.mission == 'supply' and self.unitCategory == plane then
-		if self.side == 2 and self._pendingBlueSupplyCost then
-			self.zoneCommander.battleCommander.accounts[2] = math.max((self.zoneCommander.battleCommander.accounts[2] or 0) - self._pendingBlueSupplyCost, 0)
-			self._pendingBlueSupplyCost = nil end
-		self:_assignPlaneRoute(groupName, self.targetzone)
-
-	elseif self.MissionType=='CAS' and self.unitCategory == plane then
-		bc:EngageCasMission(self.targetzone, groupName, nil, nil, self.Altitude, self._landUnitID)
-		
-	elseif self.MissionType=='CAS' and self.unitCategory == heli then
-		bc:EngageHeloCasMission(self.targetzone, groupName, nil, nil, self._landUnitID)
-	elseif self.MissionType=='SEAD' and self.unitCategory == plane then
-		bc:EngageSeadMission(self.targetzone, groupName, nil, self.Altitude)
-
-	elseif self.MissionType=='RUNWAYSTRIKE' and self.unitCategory == plane then
-		bc:EngageRunwayBombAuftrag(self.zoneCommander.airbaseName, self.targetzone, groupName, self.Altitude, self.side)
-	
-	elseif self.MissionType=='ANTISHIP' and self.unitCategory == plane then
-		bc:EngageAntiShipMission(self.targetzone, groupName,nil,nil, self.Altitude, self._landUnitID)
-	end
-end
-
 function GroupCommander:_getAirType()
 	local gr = Group.getByName(self.name)
 	if gr then
@@ -10854,47 +10799,47 @@ function GroupCommander:_getAirType()
 	return "enemy Bogey"
 end
 
-ProblemGroups = {}
-function GroupCommander:processAir()
-	local originZone = self.zoneCommander.zone
-	local gr = Group.getByName(self.spawnedName or self.name)
-	local zside = self.zoneCommander.side
-	local plane = Unit.Category.AIRPLANE
-	local heli = Unit.Category.HELICOPTER
-	
-	if self.template then
-		if zside and zside ~= 0 and zside ~= self.side then self.side = zside end
-	end
-
-	local coalition = self.side
-	local isUrgent = type(self.urgent) == "function" and self.urgent() or self.urgent
-	--local respawnTimers = isUrgent and GlobalSettings.urgentRespawnTimers or GlobalSettings.respawnTimers[coalition][self.mission]
-	local rt=GlobalSettings and GlobalSettings.respawnTimers
-	local respawnTimers=isUrgent and GlobalSettings.urgentRespawnTimers or (rt and rt[coalition] and rt[coalition][self.mission])
-	if not respawnTimers then if coalition ~= 0 then local reason=(not GlobalSettings and "GlobalSettings") or (not rt and "GlobalSettings.respawnTimers") or (rt[coalition]==nil and ("respawnTimers["..tostring(coalition).."]")) or ("respawnTimers["..tostring(coalition).."]["..tostring(self.mission).."]"); local msg="ERROR: Report to Leka and send log! respawnTimers nil "..reason.." name="..tostring(self.name).." mission="..tostring(self.mission).." side="..tostring(coalition).." urgent="..tostring(isUrgent); env.info(msg); trigger.action.outText(msg,30); ProblemGroups[self.name]=true end; return end
-
-	local spawnDelayFactor = self.spawnDelayFactor or 1
-	
-	
-	if self.mission == 'supply' and not isUrgent and self.side == 1 then
-		local pc = getBluePlayersCount()
-		if pc == 0 then
-			spawnDelayFactor = spawnDelayFactor * 1.5
-		elseif pc == 1 then
-			spawnDelayFactor = spawnDelayFactor * 1.3
-		end
-	end
-
-	if not gr or gr:getSize() == 0 then
-		if gr and gr:getSize() == 0 then
-			gr:destroy()
+	ProblemGroups = {}
+	function GroupCommander:processAir()
+		local originZone = self.zoneCommander.zone
+		local gr = Group.getByName(self.spawnedName or self.name)
+		local zside = self.zoneCommander.side
+		local plane = Unit.Category.AIRPLANE
+		local heli = Unit.Category.HELICOPTER
+		
+		if self.template then
+			if zside and zside ~= 0 and zside ~= self.side then self.side = zside end
 		end
 
-		if self.state ~= 'inhangar' and self.state ~= 'preparing' and self.state ~= 'dead' then
-			self.state = 'dead'
-			self.lastStateTime = timer.getAbsTime()
+		local coalition = self.side
+		local isUrgent = type(self.urgent) == "function" and self.urgent() or self.urgent
+		--local respawnTimers = isUrgent and GlobalSettings.urgentRespawnTimers or GlobalSettings.respawnTimers[coalition][self.mission]
+		local rt=GlobalSettings and GlobalSettings.respawnTimers
+		local respawnTimers=isUrgent and GlobalSettings.urgentRespawnTimers or (rt and rt[coalition] and rt[coalition][self.mission])
+		if not respawnTimers then if coalition ~= 0 then local reason=(not GlobalSettings and "GlobalSettings") or (not rt and "GlobalSettings.respawnTimers") or (rt[coalition]==nil and ("respawnTimers["..tostring(coalition).."]")) or ("respawnTimers["..tostring(coalition).."]["..tostring(self.mission).."]"); local msg="ERROR: Report to Leka and send log! respawnTimers nil "..reason.." name="..tostring(self.name).." mission="..tostring(self.mission).." side="..tostring(coalition).." urgent="..tostring(isUrgent); env.info(msg); trigger.action.outText(msg,30); ProblemGroups[self.name]=true end; return end
+
+		local spawnDelayFactor = self.spawnDelayFactor or 1
+		
+		
+		if self.mission == 'supply' and not isUrgent and self.side == 1 then
+			local pc = getBluePlayersCount()
+			if pc == 0 then
+				spawnDelayFactor = spawnDelayFactor * 1.5
+			elseif pc == 1 then
+				spawnDelayFactor = spawnDelayFactor * 1.3
+			end
 		end
-	end
+
+		if not gr or gr:getSize() == 0 then
+			if gr and gr:getSize() == 0 then
+				gr:destroy()
+			end
+
+			if self.state ~= 'inhangar' and self.state ~= 'preparing' and self.state ~= 'dead' then
+				self.state = 'dead'
+				self.lastStateTime = timer.getAbsTime()
+			end
+		end
 
     if self.state == 'inhangar' then
         if timer.getAbsTime() - self.lastStateTime > (respawnTimers.hangar * spawnDelayFactor) then
@@ -10934,9 +10879,59 @@ function GroupCommander:processAir()
 							local tpl = self:_getAirTemplate(resolved)
 							if tpl then
 								local sp = SPAWN:NewFromTemplate(tpl, resolved, self.name, true)
-								
-								local tk = (self.mission == 'supply' and self.side == 2) and SPAWN.Takeoff.Hot or SPAWN.Takeoff.Cold
-								local spawned = nil
+								sp = sp:OnSpawnGroup(function(g)
+
+									if self.MissionType == 'CAP' and self.mission== 'patrol' then
+										local gr = Group.getByName(g:GetName()); if not gr then return end
+										local side = self.side
+										local offsetNm = (side == 1) and math.random(10, 20) or math.random(1, 5)
+										local towardEnemyNm = 40
+										local off = (self.side == 2) and -towardEnemyNm or towardEnemyNm
+										local safe = (self.side == 2) and 35 or 40
+										local st = Frontline.PickStationNearZone(self.targetzone, self.side, off, 0, 0, 0, safe)
+										if not st then return end
+										local dist = (side == 1) and math.random(30, 35) or math.random(30, 40)
+										SetUpCAP(gr, { x = st.x, z = st.y }, self.Altitude, dist, self._landUnitID, 35, side)
+
+									elseif self.MissionType == 'CAP' and self.mission== 'attack' then
+										local gr = Group.getByName(g:GetName()); if not gr then return end
+										local side = self.side
+										local offsetNm = (side == 1) and math.random(10, 20) or math.random(1, 5)
+										local st = Frontline.PickCapStationFromOrigin(originZone, self.targetzone, side, 100, 35)
+										if not st then return end
+										local dist = (side == 1) and math.random(30, 35) or math.random(30, 40)
+										SetUpCAP(gr, { x = st.x, z = st.y }, self.Altitude, dist, self._landUnitID, 35, side)
+
+									elseif self.mission == 'supply' and self.unitCategory == heli then
+										if self.side == 2 and self._pendingBlueSupplyCost then
+											self.zoneCommander.battleCommander.accounts[2] = math.max((self.zoneCommander.battleCommander.accounts[2] or 0) - self._pendingBlueSupplyCost, 0)
+											self._pendingBlueSupplyCost = nil end
+										self:_assignHeloRoute(g:GetName(), self.targetzone)
+
+									elseif self.mission == 'supply' and self.unitCategory == plane then
+										if self.side == 2 and self._pendingBlueSupplyCost then
+											self.zoneCommander.battleCommander.accounts[2] = math.max((self.zoneCommander.battleCommander.accounts[2] or 0) - self._pendingBlueSupplyCost, 0)
+											self._pendingBlueSupplyCost = nil end
+										self:_assignPlaneRoute(g:GetName(), self.targetzone)
+
+									elseif self.MissionType=='CAS' and self.unitCategory == plane then
+										bc:EngageCasMission(self.targetzone, g:GetName(), nil, nil, self.Altitude, self._landUnitID)
+										
+									elseif self.MissionType=='CAS' and self.unitCategory == heli then
+										bc:EngageHeloCasMission(self.targetzone, g:GetName(), nil, nil, self._landUnitID)
+									elseif self.MissionType=='SEAD' and self.unitCategory == plane then
+										bc:EngageSeadMission(self.targetzone, g:GetName(), nil, self.Altitude)
+
+									elseif self.MissionType=='RUNWAYSTRIKE' and self.unitCategory == plane then
+										bc:EngageRunwayBombAuftrag(self.zoneCommander.airbaseName, self.targetzone, g:GetName(), self.Altitude, self.side)
+									
+									elseif self.MissionType=='ANTISHIP' and self.unitCategory == plane then
+										bc:EngageAntiShipMission(self.targetzone, g:GetName(),nil,nil, self.Altitude, self._landUnitID)
+									end
+
+								end)
+									local tk = (self.mission == 'supply' and self.side == 2) and SPAWN.Takeoff.Hot or SPAWN.Takeoff.Cold
+									local spawned = nil
 								if not self.Airbase then
 									spawned = sp:SpawnAtParkingSpot(SpawnType.airbase, SpawnType.spots, tk)
 									if not spawned then spawned = sp:SpawnAtAirbase(SpawnType.airbase, tk) end
@@ -10993,56 +10988,70 @@ function GroupCommander:processAir()
 			end
 		end
 
-	elseif self.state == 'takeoff' then
-		if timer.getAbsTime() - self.lastStateTime > GlobalSettings.blockedDespawnTime then
+		elseif self.state == 'takeoff' then
+			if timer.getAbsTime() - self.lastStateTime > GlobalSettings.blockedDespawnTime then
+				if gr and Utils.allGroupIsLanded(gr, self.landsatcarrier) then
+					gr:destroy()
+					self.state = 'inhangar'
+					self.lastStateTime = timer.getAbsTime()
+				end
+			elseif gr and Utils.someOfGroupInAir(gr) then
+					if self.pinged then
+					local tp = self:_getAirType()
+						self:_jtacMessage('JTAC: '..tp..' just took off from', true, originZone)
+					end
+					--env.info("Group [" .. self.name .. "] is airborne")
+					self.state = 'inair'
+					self.pinged = false
+					self.lastStateTime = timer.getAbsTime()
+			end
+
+		elseif self.state == 'inair' then
+			if self.mission=='supply' and not self._zonePinged then
+				local tg = self.zoneCommander.battleCommander:getZoneByName(self.targetzone)
+				if tg and gr and Utils.someOfGroupInZone(gr, tg.zone) then
+					local tp = self:_getAirType()
+					self:_jtacMessage('JTAC: Have eyes on '..tp..' inbound and about to land at',true,tg.zone)
+					self._zonePinged = true
+				end
+			end
 			if gr and Utils.allGroupIsLanded(gr, self.landsatcarrier) then
-				gr:destroy()
-				self.state = 'inhangar'
+				self.state = 'landed'
 				self.lastStateTime = timer.getAbsTime()
+				self._landedAt = self._landedAt or self.lastStateTime
 			end
-		elseif gr and Utils.someOfGroupInAir(gr) then
-				if self.pinged then
-				local tp = self:_getAirType()
-					self:_jtacMessage('JTAC: '..tp..' just took off from', true, originZone)
+		elseif self.state == 'landed' then
+			self._landedAt = self._landedAt or timer.getAbsTime()
+			if self.mission == 'supply' then
+				local tg = self.zoneCommander.battleCommander:getZoneByName(self.targetzone)
+				if tg and gr and Utils.someOfGroupInZone(gr, tg.zone) then
+					self.state = 'inhangar'
+					self.lastStateTime = timer.getAbsTime()
+					self._landedAt = nil
+					if tg.side == 0 then
+						env.info("Group [" .. self.name .. "] landed in zone [" .. tg.zone .. "], capturing zone for side " .. self.side)
+						SCHEDULER:New(nil,function() tg:capture(self.side) end,{},0.3,0)
+					elseif tg.side == self.side then
+						env.info("Group [" .. self.name .. "] landed in zone [" .. tg.zone .. "], upgrading zone for side " .. self.side)
+						tg:upgrade()
+					end
+					SCHEDULER:New(nil,function() if gr and gr:isExist() then gr:destroy() end end,{},0.5,0)
+				else
+					local hb = self.zoneCommander.battleCommander:getZoneByName(self.zoneCommander.zone)
+					if hb and gr and Utils.someOfGroupInZone(gr, hb.zone) then
+						self.state = 'inhangar'
+						self.lastStateTime = timer.getAbsTime()
+						self._landedAt = nil
+						SCHEDULER:New(nil,function() if gr and gr:isExist() then gr:destroy() end end,{},0.5,0)
+					end
 				end
-				--env.info("Group [" .. self.name .. "] is airborne")
-				self.state = 'inair'
-				self.pinged = false
-				self.lastStateTime = timer.getAbsTime()
-
-				self:_TestAssignTask(self.spawnedName, originZone)
-		end
-
-	elseif self.state == 'inair' then
-		if self.mission=='supply' and not self._zonePinged then
-			local tg = self.zoneCommander.battleCommander:getZoneByName(self.targetzone)
-			if tg and gr and Utils.someOfGroupInZone(gr, tg.zone) then
-				local tp = self:_getAirType()
-				self:_jtacMessage('JTAC: Have eyes on '..tp..' inbound and about to land at',true,tg.zone)
-				self._zonePinged = true
-			end
-		end
-		if gr and Utils.allGroupIsLanded(gr, self.landsatcarrier) then
-			self.state = 'landed'
-			self.lastStateTime = timer.getAbsTime()
-			self._landedAt = self._landedAt or self.lastStateTime
-		end
-	elseif self.state == 'landed' then
-		self._landedAt = self._landedAt or timer.getAbsTime()
-		if self.mission == 'supply' then
-			local tg = self.zoneCommander.battleCommander:getZoneByName(self.targetzone)
-			if tg and gr and Utils.someOfGroupInZone(gr, tg.zone) then
-				self.state = 'inhangar'
-				self.lastStateTime = timer.getAbsTime()
-				self._landedAt = nil
-				if tg.side == 0 then
-					env.info("Group [" .. self.name .. "] landed in zone [" .. tg.zone .. "], capturing zone for side " .. self.side)
-					SCHEDULER:New(nil,function() tg:capture(self.side) end,{},0.3,0)
-				elseif tg.side == self.side then
-					env.info("Group [" .. self.name .. "] landed in zone [" .. tg.zone .. "], upgrading zone for side " .. self.side)
-					tg:upgrade()
+				local landedDespawnTime = (self.unitCategory == plane) and 180 or GlobalSettings.landedDespawnTime
+				if timer.getAbsTime() - (self._landedAt or self.lastStateTime) > landedDespawnTime then
+					if gr and gr:isExist() then gr:destroy() end
+					self.state = 'inhangar'
+					self.lastStateTime = timer.getAbsTime()
+					self._landedAt = nil
 				end
-				SCHEDULER:New(nil,function() if gr and gr:isExist() then gr:destroy() end end,{},0.5,0)
 			else
 				local hb = self.zoneCommander.battleCommander:getZoneByName(self.zoneCommander.zone)
 				if hb and gr and Utils.someOfGroupInZone(gr, hb.zone) then
@@ -11052,31 +11061,15 @@ function GroupCommander:processAir()
 					SCHEDULER:New(nil,function() if gr and gr:isExist() then gr:destroy() end end,{},0.5,0)
 				end
 			end
-			local landedDespawnTime = (self.unitCategory == plane) and 180 or GlobalSettings.landedDespawnTime
-			if timer.getAbsTime() - (self._landedAt or self.lastStateTime) > landedDespawnTime then
-				if gr and gr:isExist() then gr:destroy() end
-				self.state = 'inhangar'
-				self.lastStateTime = timer.getAbsTime()
-				self._landedAt = nil
-			end
-		else
-			local hb = self.zoneCommander.battleCommander:getZoneByName(self.zoneCommander.zone)
-			if hb and gr and Utils.someOfGroupInZone(gr, hb.zone) then
-				self.state = 'inhangar'
-				self.lastStateTime = timer.getAbsTime()
-				self._landedAt = nil
-				SCHEDULER:New(nil,function() if gr and gr:isExist() then gr:destroy() end end,{},0.5,0)
-			end
-		end
-	elseif self.state == 'dead' then
-		if timer.getAbsTime() - self.lastStateTime > (respawnTimers.dead * spawnDelayFactor) then
-			if self:shouldSpawn() then
-				self.state = 'preparing'
-				self.lastStateTime = timer.getAbsTime()
+		elseif self.state == 'dead' then
+			if timer.getAbsTime() - self.lastStateTime > (respawnTimers.dead * spawnDelayFactor) then
+				if self:shouldSpawn() then
+					self.state = 'preparing'
+					self.lastStateTime = timer.getAbsTime()
+				end
 			end
 		end
 	end
-end
 
 	
 	function GroupCommander:processSurface()

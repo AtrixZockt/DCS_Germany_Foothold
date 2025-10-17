@@ -1221,7 +1221,7 @@ GlobalSettings = {}
 do
 	GlobalSettings.blockedDespawnTime = 10*60 --used to despawn aircraft that are stuck taxiing for some reason
 	GlobalSettings.landedDespawnTime = 1*60
-	GlobalSettings.initialDelayVariance = 30 -- minutes
+	GlobalSettings.initialDelayVariance = 10 -- minutes
 	
 	GlobalSettings.messages = {
 		grouplost = false,
@@ -1919,6 +1919,7 @@ end
 	end
 
 	function BattleCommander:engageZone(tgtzone, groupname, expendAmmount, weapon)
+		env.info("DIGII ZC: GROUP: "..groupname.. " is Engaging: "..tgtzone)
 		local zn = self:getZoneByName(tgtzone)
 		local group = Group.getByName(groupname)
 		
@@ -5184,13 +5185,13 @@ mist.scheduleFunction(refreshPlayers, {}, timer.getTime() + 10, 60)
 
 function getCapLimit(numPlayers)
     if numPlayers == 0 then
-        return 1
+        return 5
     elseif numPlayers == 1 then
-        return 2
+        return 7
 	elseif numPlayers == 2 then
-        return 3
+        return 8
     elseif numPlayers == 3 then
-        return 4
+        return 9
     else
         return 99999
     end
@@ -5559,7 +5560,19 @@ function GroupCommander:processAir()
                 end
                 
                 self:clearWreckage()
-                mist.respawnGroup(self.name, true)
+                local mistGroup = mist.respawnGroup(self.name, true)
+
+				mist.scheduleFunction(function(mistGroupi)
+					local mooseGroup = GROUP:FindByName(mistGroupi.name)
+					env.info("DiGii ZC: Foudn moose group: " ..mooseGroup:GetName())
+					local flightGroup = FLIGHTGROUP:New(mooseGroup)
+					--flightGroup:StartUncontrolled(10)
+
+					local flightControl = flightGroup:GetFlightControl()
+					flightControl:SetFlightStatus(flightGroup, FLIGHTCONTROL.FlightStatus.READYTX)
+				end, {mistGroup}, timer.getTime() + 5)
+
+				
                 self.state = 'takeoff'
                 self.lastStateTime = timer.getAbsTime()
             end
