@@ -1,46 +1,14 @@
 # TODO
 
-1. Reenable ATC Park guard + test AI and add code from old ZoneCommander if needed (flightControl:SetFlightStatus(flightGroup, FLIGHTCONTROL.FlightStatus.READYTX))
-2. Remove all env.info related to luneburg 
+1. Update @WelcomeMessage_Caucasus.lua to newest version and change it to match germany
 
-3. Check why units dont spawn as group (local sp = SPAWN:NewFromTemplate(tpl, resolved, self.name, true):InitUnControlled( true ))
-4. Check all AI missoins 
-5. maybe move `_testGiveMission` back into onSpawnCommand
+2. Check all AI missoins 
 
 
 99. Get my sanity back
 
 
 # Notes
-
-## AI Tasking
-
-1. CAS Mission
-- Not designed for Bombs (For bombs use Ground Attack Missoin)
-- Run Script on Waypoint from which the attack should start:
-``` lua
---BattleCommander:engageZone(tgtzone, groupname, expendAmmount=Optional, weapon=Optional)
-
-local gr = ...
-bc:engageZone('Frankfurt',gr:getName())
-```
-
-2. Ground Attack Mission
-- Designed for use with bombs for CarpetBombing
-- Run script on Waypoint from which the attack should start:
-```lua
---BattleCommander:carpetBombRandomUnitInZone(tgtzone, groupname)
-
-local gr = ...
-bc:carpetBombRandomUnitInZone('Fritzlar', gr:getName())
-```
-
-3. CAP Mission
-- No custom script
-- Waypoint settings:
-    - Start Enroute Task: Search Then Engage (Only Air)
-    - Perform Task: Barrier Combat Air Patrol (Racetrack) - Use second to last point
-
 
 
 ## ZC moose
