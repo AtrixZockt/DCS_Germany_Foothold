@@ -43,7 +43,7 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
     local zoneObject = ZONE:FindByName(zone.zone)
     if not zoneObject then return end
 
-    local enemyGroupsInZone = SET_GROUP:New():FilterZones({zoneObject}):FilterCoalitions("red"):FilterOnce()
+    local enemyGroupsInZone = SET_GROUP:New():FilterZones({ zoneObject }):FilterCoalitions("red"):FilterOnce()
 
     local sead_pool, cas_pool, strike_pool_groups = {}, {}, {}
 
@@ -55,19 +55,19 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
                 local firstUnit = group:GetUnit(1)
                 if firstUnit and firstUnit:IsAlive() then
                     if firstUnit:IsGround() and (
-                       firstUnit:HasAttribute("SAM SR") or
-                       firstUnit:HasAttribute("SAM TR") or
-                       firstUnit:HasAttribute("SAM LR") or
-                       firstUnit:HasAttribute("SAM MR")
-                    ) then
+                            firstUnit:HasAttribute("SAM SR") or
+                            firstUnit:HasAttribute("SAM TR") or
+                            firstUnit:HasAttribute("SAM LR") or
+                            firstUnit:HasAttribute("SAM MR")
+                        ) then
                         table.insert(sead_pool, group)
                     elseif firstUnit:HasAttribute("SAM elements") then
                         table.insert(strike_pool_groups, group)
-                    -- For CAS, units are checked individually, not the whole group
-                    elseif firstUnit:HasAttribute("Tanks") 
-                        or firstUnit:HasAttribute("IFV") 
-                        or firstUnit:HasAttribute("APC") 
-                        or firstUnit:HasAttribute("Infantry") 
+                        -- For CAS, units are checked individually, not the whole group
+                    elseif firstUnit:HasAttribute("Tanks")
+                        or firstUnit:HasAttribute("IFV")
+                        or firstUnit:HasAttribute("APC")
+                        or firstUnit:HasAttribute("Infantry")
                         or firstUnit:HasAttribute("MANPADS")
                         or firstUnit:HasAttribute("Air Defence vehicles")
                         or firstUnit:HasAttribute("AAA")
@@ -80,7 +80,7 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
     end
 
     local strike_pool_statics = {}
-    SET_STATIC:New():FilterZones({zoneObject}):FilterCoalitions("red"):FilterOnce():ForEach(function(staticObject)
+    SET_STATIC:New():FilterZones({ zoneObject }):FilterCoalitions("red"):FilterOnce():ForEach(function(staticObject)
         -- Check if the static itself is assigned (for STRIKE)
         local staticName = staticObject:GetName()
         if staticObject:IsAlive() and not self.AssignedTargets[staticName] then
@@ -93,17 +93,20 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
 
     if #sead_pool > 0 and #self.ActiveMissions < self.Config.MaxMissions then
         local targetGroup = sead_pool[math.random(1, #sead_pool)]
-        self:CreateMission("SEAD", targetGroup, "Destroy "..targetGroup:GetUnit(1):GetTypeName().." in "..zone.zone, self.Config.XP_SEAD, targetGroup:GetSize(), zone.zone)
+        self:CreateMission("SEAD", targetGroup, "Destroy " .. targetGroup:GetUnit(1):GetTypeName() .. " in " .. zone
+            .zone, self.Config.XP_SEAD, targetGroup:GetSize(), zone.zone)
     end
 
     if #strike_pool_groups > 0 and #self.ActiveMissions < self.Config.MaxMissions then
         local targetGroup = strike_pool_groups[math.random(1, #strike_pool_groups)]
-        self:CreateMission("STRIKE", targetGroup, "Destroy "..targetGroup:GetUnit(1):GetTypeName().." in "..zone.zone, self.Config.XP_STRIKE, targetGroup:GetSize(), zone.zone)
+        self:CreateMission("STRIKE", targetGroup, "Destroy " .. targetGroup:GetUnit(1):GetTypeName() .. " in " ..
+            zone.zone, self.Config.XP_STRIKE, targetGroup:GetSize(), zone.zone)
     end
 
     if #strike_pool_statics > 0 and #self.ActiveMissions < self.Config.MaxMissions then
         local targetStatic = strike_pool_statics[math.random(1, #strike_pool_statics)]
-        self:CreateMission("STRIKE", targetStatic, "Destroy "..targetStatic:GetTypeName().." in "..zone.zone, self.Config.XP_STRIKE, 1, zone.zone)
+        self:CreateMission("STRIKE", targetStatic, "Destroy " .. targetStatic:GetTypeName() .. " in " .. zone.zone,
+            self.Config.XP_STRIKE, 1, zone.zone)
     end
 
     -- Create a single CAS mission for all suitable targets in the zone
@@ -116,7 +119,7 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
                     local unitName = unit:GetName()
                     if not self.AssignedTargets[unitName] then -- Check if unit is already assigned to any mission
                         totalCasUnitsInZone = totalCasUnitsInZone + 1
-                        casTargetUnits[unitName] = true -- Store unit name as key for fast lookup
+                        casTargetUnits[unitName] = true        -- Store unit name as key for fast lookup
                     end
                 end
             end
@@ -126,7 +129,8 @@ function DynamicTasking:GenerateA2GMissionForZone(zone)
     if totalCasUnitsInZone > 0 and #self.ActiveMissions < self.Config.MaxMissions then
         local description = string.format("Destroy %d enemy ground units in %s", totalCasUnitsInZone, zone.zone)
         -- For CAS, targetIdentifier is the zone name, requiredKills is totalCasUnitsInZone
-        self:CreateMission("CAS", zone.zone, description, self.Config.XP_CAS, totalCasUnitsInZone, zone.zone, casTargetUnits)
+        self:CreateMission("CAS", zone.zone, description, self.Config.XP_CAS, totalCasUnitsInZone, zone.zone,
+            casTargetUnits)
     end
 end
 
@@ -136,7 +140,8 @@ function DynamicTasking:GenerateCaptureMission(zone)
     if #self.ActiveMissions >= self.Config.MaxMissions then return end
     local zoneObject = ZONE:FindByName(zone.zone)
     if not zoneObject then return end
-    self:CreateMission("CAPTURE", zoneObject, "Capture "..zone.zone.." with logistics", self.Config.XP_CAPTURE, 1, zone.zone)
+    self:CreateMission("CAPTURE", zoneObject, "Capture " .. zone.zone .. " with logistics", self.Config.XP_CAPTURE, 1,
+        zone.zone)
 end
 
 --- Creates a new player-joinable A2A mission.
@@ -145,18 +150,22 @@ function DynamicTasking:GenerateA2AMission(contact)
     local groupName = contact.groupname
     local enemyGroup = GROUP:FindByName(groupName)
     if not enemyGroup or not enemyGroup:IsAlive() then return end
-    enemyGroup:HandleEvent( EVENTS.Crash, self.A2AMissionEventCrashOrDead )
-    enemyGroup:HandleEvent( EVENTS.UnitLost, self.A2AMissionEventCrashOrDead )
-    enemyGroup:HandleEvent( EVENTS.RemoveUnit, self.A2AMissionEventCrashOrDead )
-    enemyGroup:HandleEvent( EVENTS.Land, self.A2AMissionEventCrashOrDead )
-    enemyGroup:HandleEvent( EVENTS.Dead, self.A2AMissionEventCrashOrDead )
+    enemyGroup:HandleEvent(EVENTS.Crash, self.A2AMissionEventCrashOrDead)
+    enemyGroup:HandleEvent(EVENTS.UnitLost, self.A2AMissionEventCrashOrDead)
+    enemyGroup:HandleEvent(EVENTS.RemoveUnit, self.A2AMissionEventCrashOrDead)
+    enemyGroup:HandleEvent(EVENTS.Land, self.A2AMissionEventCrashOrDead)
+    enemyGroup:HandleEvent(EVENTS.Dead, self.A2AMissionEventCrashOrDead)
 
-    self:CreateMission("INTERCEPT", enemyGroup, "Intercept and destroy "..contact.platform.. " (" ..contact.typename.. ")", self.Config.XP_INTERCEPT, enemyGroup:GetSize())
-    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired before: " ..groupName)
+    self:CreateMission("INTERCEPT", enemyGroup,
+        "Intercept and destroy " .. contact.platform .. " (" .. contact.typename .. ")", self.Config.XP_INTERCEPT,
+        enemyGroup:GetSize())
+    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired before: " .. groupName)
 end
 
 function DynamicTasking:A2AMissionEventCrashOrDead(eventData)
-    env.info(string.format("DynamicTasking:A2AMissionEventCrashOrDead - Event fired: TgtGroup: %s, TgtUnit: %s, TgtGroupName: %s", eventData.TgtGroup, eventData.TgtUnit, eventData.TgtGroupName))
+    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired: TgtGroup: " .. eventData.TgtGroup)
+    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired: TgtUnit: " .. eventData.TgtGroup)
+    env.info("DynamicTasking:A2AMissionEventCrashOrDead - Event fired: TgtGroupName: " .. eventData.TgtGroupName)
 end
 
 --- Creates a new player-joinable Runway Attack mission.
@@ -205,9 +214,11 @@ function DynamicTasking:GenerateRunwayAttackMission(airbaseName, requiredHits)
         return
     end
 
-    env.info("DynamicTasking:GenerateRunwayAttackMission - Runway found: " ..runway.zone:GetName().. " Runway name: " ..runway.name)
+    env.info("DynamicTasking:GenerateRunwayAttackMission - Runway found: " ..
+        runway.zone:GetName() .. " Runway name: " .. runway.name)
 
-    self:CreateMission("RUNWAY", runway, "Destroy runway " .. runway.name .. " at " .. airbaseName, self.Config.XP_RUNWAY, requiredHits or 3, airbaseName)
+    self:CreateMission("RUNWAY", runway, "Destroy runway " .. runway.name .. " at " .. airbaseName, self.Config
+        .XP_RUNWAY, requiredHits or 3, airbaseName)
     return true -- Mission successfully created
 end
 
@@ -216,22 +227,26 @@ end
 -- This function was previously modified to include an immediate menu refresh.
 function DynamicTasking:CreateMission(type, targetIdentifier, description, xpValue, requiredKills, zoneName, targetUnits)
     local mission = {
-        joinCode = self:GenerateCode(), type = type, description = description, xpValue = xpValue,
-        assignedPlayers = {}, 
+        joinCode = self:GenerateCode(),
+        type = type,
+        description = description,
+        xpValue = xpValue,
+        assignedPlayers = {},
         requiredKills = requiredKills,
         zoneName = zoneName or (targetIdentifier and targetIdentifier.zone) or "N/A",
-        killCount = 0,      -- Used for CAS missions
-        killedUnits = {},   -- Used for CAS to track unique kills
-        bombHits = 0        -- Used for RUNWAY missions
+        killCount = 0,    -- Used for CAS missions
+        killedUnits = {}, -- Used for CAS to track unique kills
+        bombHits = 0      -- Used for RUNWAY missions
     }
 
     if type == "CAS" then
-        mission.targetObject = nil -- No specific MOOSE object for CAS target; it's zone-based.
+        mission.targetObject = nil              -- No specific MOOSE object for CAS target; it's zone-based.
         mission.targetUnits = targetUnits or {} -- Store the list of target units for this CAS mission
 
         -- Assign individual CAS units to self.AssignedTargets
         for unitName, _ in pairs(mission.targetUnits) do
-            env.info(string.format("DynamicTasking:CreateMission - CAS Mission %s: Assigning target unit '%s'.", mission.joinCode, unitName))
+            env.info(string.format("DynamicTasking:CreateMission - CAS Mission %s: Assigning target unit '%s'.",
+                mission.joinCode, unitName))
             self.AssignedTargets[unitName] = mission.joinCode
         end
     elseif type == "RUNWAY" then
@@ -270,17 +285,22 @@ function DynamicTasking:CreateMission(type, targetIdentifier, description, xpVal
             if primaryRadarUnit then
                 mission.primaryRadarUnit = primaryRadarUnit
                 mission.requiredKills = 1 -- Only one unit (the radar) needs to be destroyed
-                env.info(string.format("DynamicTasking:CreateMission - SEAD Mission %s: Primary radar unit set to '%s'.", mission.joinCode, primaryRadarUnit:GetName()))
+                env.info(string.format("DynamicTasking:CreateMission - SEAD Mission %s: Primary radar unit set to '%s'.",
+                    mission.joinCode, primaryRadarUnit:GetName()))
             else
                 -- Fallback if no specific radar unit is found (shouldn't happen if it passed SEAD pool filter)
-                env.warn(string.format("DynamicTasking:CreateMission - SEAD Mission %s: No specific primary radar unit found. Falling back to group destruction.", mission.joinCode))
+                env.warn(string.format(
+                    "DynamicTasking:CreateMission - SEAD Mission %s: No specific primary radar unit found. Falling back to group destruction.",
+                    mission.joinCode))
             end
         end
 
         -- Keep AssignedTargets for non-CAS missions if they target specific groups/statics
         -- Assign the target entity to self.AssignedTargets
         if targetIdentifier and (targetIdentifier.ClassName == "GROUP" or targetIdentifier.ClassName == "STATIC") then
-            env.info(string.format("DynamicTasking:CreateMission - Non-CAS Mission %s (%s): Assigning target '%s' (Class=%s, InitialUnits=%d).", mission.joinCode, type, targetIdentifier:GetName(), targetIdentifier.ClassName, mission.initialUnitCount))
+            env.info(string.format(
+                "DynamicTasking:CreateMission - Non-CAS Mission %s (%s): Assigning target '%s' (Class=%s, InitialUnits=%d).",
+                mission.joinCode, type, targetIdentifier:GetName(), targetIdentifier.ClassName, mission.initialUnitCount))
             self.AssignedTargets[targetIdentifier:GetName()] = mission.joinCode
         elseif targetIdentifier and targetIdentifier.ClassName == "TARGET" then
             -- If TARGET missions are to be tracked, iterate through their constituent groups/statics
@@ -291,7 +311,8 @@ function DynamicTasking:CreateMission(type, targetIdentifier, description, xpVal
     end
 
     self.ActiveMissions[mission.joinCode] = mission
-    MESSAGE:New(string.format("New Mission Available: [%s - %s] %s", type, mission.joinCode, description), 30, "Tasking Update"):ToAll()
+    MESSAGE:New(string.format("New Mission Available: [%s - %s] %s", type, mission.joinCode, description), 30,
+        "Tasking Update"):ToAll()
     self:UpdateAllPlayerMenus() -- Immediate refresh after mission creation
 end
 
@@ -302,7 +323,8 @@ function DynamicTasking:CompleteMission(missionCode, objectiveMet)
 
     if objectiveMet and #mission.assignedPlayers > 0 then
         local playerList = table.concat(mission.assignedPlayers, ", ")
-        local messageText = string.format("Objective Complete! %s. Players %s awarded %d XP.", mission.description, playerList, mission.xpValue)
+        local messageText = string.format("Objective Complete! %s. Players %s awarded %d XP.\nLand at a friendly Airbase to claim your XP and Credits!", mission.description,
+            playerList, mission.xpValue)
         MESSAGE:New(messageText, 30, "Mission Accomplished"):ToAll()
         for _, playerName in pairs(mission.assignedPlayers) do
             if not self.PlayerXP[playerName] then self.PlayerXP[playerName] = {} end
@@ -314,9 +336,11 @@ function DynamicTasking:CompleteMission(missionCode, objectiveMet)
             end
         end
     elseif objectiveMet and #mission.assignedPlayers == 0 then -- Objective met but no one assigned
-        MESSAGE:New(string.format("Objective Complete! %s. No players were assigned to receive XP.", mission.description), 30, "Objective Met"):ToAll()
+        MESSAGE:New(
+            string.format("Objective Complete! %s. No players were assigned to receive XP.", mission.description), 30,
+            "Objective Met"):ToAll()
     end
-    
+
     -- Clear AssignedTargets for the completed mission
     if mission.type ~= "CAS" and mission.targetObject then
         local targetObject = mission.targetObject
@@ -359,7 +383,8 @@ function DynamicTasking:LeaveMission(playerName, unitObject)
             end
         end
         self.PlayerAssignments[playerName] = nil
-        MESSAGE:New(string.format("You have left mission [%s - %s].", mission.type, mission.joinCode), 20):ToUnit(unitObject)
+        MESSAGE:New(string.format("You have left mission [%s - %s].", mission.type, mission.joinCode), 20):ToUnit(
+            unitObject)
     end
 end
 
@@ -371,53 +396,72 @@ function DynamicTasking:MissionMonitor()
     for code, mission in pairs(self.ActiveMissions) do
         local isComplete = false
         local objectiveMet = true
-        env.info(string.format("DynamicTasking:MissionMonitor - Processing mission: [%s - %s] %s", mission.type, mission.joinCode, mission.description))
+        env.info(string.format("DynamicTasking:MissionMonitor - Processing mission: [%s - %s] %s", mission.type,
+            mission.joinCode, mission.description))
 
         if mission.type == "CAPTURE" then -- CAPTURE uses a MOOSE ZONE object as targetObject
-            if not mission.targetObject then 
-                isComplete = true; objectiveMet = false; 
+            if not mission.targetObject then
+                isComplete = true; objectiveMet = false;
             else
                 local zone = mission.targetObject
-                env.info(string.format("DynamicTasking:MissionMonitor - CAPTURE Mission %s: Zone '%s' current side: %s.", mission.joinCode, zone:GetName(), tostring(zone.side)))
-                if zone and zone.side == 2 then -- Assuming player coalition is BLUE (side 2)
+                env.info(string.format("DynamicTasking:MissionMonitor - CAPTURE Mission %s: Zone '%s' current side: %s.",
+                    mission.joinCode, zone:GetName(), tostring(zone.side)))
+                if zone and zone.side == 2 then     -- Assuming player coalition is BLUE (side 2)
                     isComplete = true
                 elseif zone and zone.side == 1 then -- Zone captured by RED (side 1)
                     isComplete = true; objectiveMet = false
-                    MESSAGE:New(string.format("Capture mission for %s failed. Zone was captured by the enemy.", mission.zoneName), 20, "Mission Failed"):ToAll()
+                    MESSAGE:New(
+                        string.format("Capture mission for %s failed. Zone was captured by the enemy.", mission.zoneName),
+                        20,
+                        "Mission Failed"):ToAll()
                 end
             end
-        
         elseif mission.type == "SEAD" and mission.primaryRadarUnit and not mission.primaryRadarUnit:IsAlive() then
             isComplete = true
             objectiveMet = true
-            env.info(string.format("DynamicTasking:MissionMonitor - SEAD Mission %s: Primary radar unit '%s' destroyed.", mission.joinCode, mission.primaryRadarUnit:GetName()))
-        
+            env.info(string.format("DynamicTasking:MissionMonitor - SEAD Mission %s: Primary radar unit '%s' destroyed.",
+                mission.joinCode, mission.primaryRadarUnit:GetName()))
         elseif mission.type == "CAS" and (mission.killCount or 0) >= mission.requiredKills then
             isComplete = true
-            env.info(string.format("DynamicTasking:MissionMonitor - CAS Mission %s progress: %d/%d kills.", mission.joinCode, (mission.killCount or 0), mission.requiredKills))
+            env.info(string.format("DynamicTasking:MissionMonitor - CAS Mission %s progress: %d/%d kills.",
+                mission.joinCode, (mission.killCount or 0), mission.requiredKills))
         elseif mission.type == "RUNWAY" and (mission.bombHits or 0) >= mission.requiredKills then
             isComplete = true
-            env.info(string.format("DynamicTasking:MissionMonitor - RUNWAY Mission %s progress: %d/%d hits.", mission.joinCode, (mission.bombHits or 0), mission.requiredKills))
-        
+            env.info(string.format("DynamicTasking:MissionMonitor - RUNWAY Mission %s progress: %d/%d hits.",
+                mission.joinCode, (mission.bombHits or 0), mission.requiredKills))
+            if RunwayHandler then
+                RunwayHandler:UnHandleEvent(EVENTS.Shot)
+                RunwayHandler = nil
+                runwayMission = nil
+            end
+            RUNWAY_ZONE_COOLDOWN[runwayTargetZone]=timer.getTime()+1800
+	        runwayCooldown = timer.getTime()+600
+            runwayTargetZone, bomberName, runwayTarget = nil, nil, nil
         elseif mission.type ~= "CAS" and mission.type ~= "CAPTURE" and mission.type ~= "RUNWAY" and (not mission.targetObject or not mission.targetObject:IsAlive()) then
             isComplete = true
             objectiveMet = not mission.targetObject -- if targetObject is nil, it's a failure.
             local targetName = mission.targetObject and mission.targetObject:GetName() or "N/A"
             local targetAlive = mission.targetObject and mission.targetObject:IsAlive()
             local initialUnits = mission.initialUnitCount or 1
-            local currentAliveUnits = (mission.targetObject and mission.targetObject.CountAliveUnits and mission.targetObject:CountAliveUnits()) or (targetAlive and 1 or 0)
+            local currentAliveUnits = (mission.targetObject and mission.targetObject.CountAliveUnits and mission.targetObject:CountAliveUnits()) or
+                (targetAlive and 1 or 0)
 
-            env.info(string.format("DynamicTasking:MissionMonitor - Non-CAS/CAPTURE Mission %s (%s) target '%s' alive: %s. Initial units: %d, Current alive: %d", mission.joinCode, mission.type, targetName, tostring(targetAlive), initialUnits, currentAliveUnits))
+            env.info(string.format(
+                "DynamicTasking:MissionMonitor - Non-CAS/CAPTURE Mission %s (%s) target '%s' alive: %s. Initial units: %d, Current alive: %d",
+                mission.joinCode, mission.type, targetName, tostring(targetAlive), initialUnits, currentAliveUnits))
             if isComplete then
-                env.info(string.format("DynamicTasking:MissionMonitor - Mission %s (%s) marked complete. Objective met: %s", mission.joinCode, mission.type, tostring(objectiveMet)))
+                env.info(string.format(
+                    "DynamicTasking:MissionMonitor - Mission %s (%s) marked complete. Objective met: %s",
+                    mission.joinCode,
+                    mission.type, tostring(objectiveMet)))
             end
         end
 
         if isComplete then
-            table.insert(missionsToComplete, {code = code, met = objectiveMet})
+            table.insert(missionsToComplete, { code = code, met = objectiveMet })
         end
     end
-    
+
     for _, m in ipairs(missionsToComplete) do
         self:CompleteMission(m.code, m.met)
     end
@@ -430,12 +474,15 @@ function DynamicTasking:JoinMission(playerName, unitObject, mission)
     if currentAssignedMissionCode then
         local currentAssignedMission = self.ActiveMissions[currentAssignedMissionCode]
         if currentAssignedMission and currentAssignedMission.joinCode ~= mission.joinCode then
-            MESSAGE:New(string.format("You are already assigned to mission [%s - %s]. Please leave or complete it before joining another.",
-                currentAssignedMission.type, currentAssignedMission.joinCode), 20):ToUnit(unitObject)
+            MESSAGE:New(
+                string.format(
+                    "You are already assigned to mission [%s - %s]. Please leave or complete it before joining another.",
+                    currentAssignedMission.type, currentAssignedMission.joinCode), 20):ToUnit(unitObject)
             return
-        elseif not currentAssignedMission then -- Ghost assignment, mission might have been completed/removed
+        elseif not currentAssignedMission then       -- Ghost assignment, mission might have been completed/removed
             self.PlayerAssignments[playerName] = nil -- Clear ghost assignment
-            MESSAGE:New("Your previous mission has been completed or removed. You are now free to join a new one.", 20):ToUnit(unitObject)
+            MESSAGE:New("Your previous mission has been completed or removed. You are now free to join a new one.", 20)
+                :ToUnit(unitObject)
         end
     end
 
@@ -450,9 +497,10 @@ function DynamicTasking:JoinMission(playerName, unitObject, mission)
     table.insert(mission.assignedPlayers, playerName)
     self.PlayerAssignments[playerName] = mission.joinCode
 
-    env.info("Mission joined: " ..self.PlayerAssignments[playerName])
+    env.info("Mission joined: " .. self.PlayerAssignments[playerName])
 
-    MESSAGE:New(string.format("You have joined mission [%s - %s]. Good luck.", mission.type, mission.joinCode), 20):ToUnit(unitObject)
+    MESSAGE:New(string.format("You have joined mission [%s - %s]. Good luck.", mission.type, mission.joinCode), 20)
+        :ToUnit(unitObject)
 
     local unitGroup = unitObject:GetGroup()
     if unitGroup then
@@ -469,7 +517,7 @@ end
 function DynamicTasking:DisplayMissionList(playerGroup, missionType)
     local messageParts = { string.format("--- AVAILABLE %s MISSIONS ---\n", missionType) }
     local hasMissions = false
-    
+
     for code, mission in pairs(self.ActiveMissions) do
         if mission.type == missionType then
             hasMissions = true
@@ -483,20 +531,20 @@ function DynamicTasking:DisplayMissionList(playerGroup, missionType)
             table.insert(messageParts, string.format("TASK: %s\n", mission.type))
             table.insert(messageParts, string.format("Zone: %s\n", mission.zoneName))
             table.insert(messageParts, string.format("Description:\n  %s\n", mission.description))
-            table.insert(messageParts, string.format("Reward: %s XP", mission.xpValue))
+            table.insert(messageParts, string.format("Reward: %s XP\n", mission.xpValue))
             table.insert(messageParts, string.format("Assigned Players: %s\n", playersString))
         end
     end
-    
-    if not hasMissions then 
+
+    if not hasMissions then
         table.insert(messageParts, string.format("No %s missions available at this time.", missionType))
     else
         table.insert(messageParts, "----------------------------------------\n")
     end
-    
+
     local message = table.concat(messageParts)
-    if playerGroup and playerGroup:IsAlive() then 
-        MESSAGE:New(message, 90, "Available Tasking"):ToGroup(playerGroup) 
+    if playerGroup and playerGroup:IsAlive() then
+        MESSAGE:New(message, 90, "Available Tasking"):ToGroup(playerGroup)
     end
 end
 
@@ -521,8 +569,8 @@ function DynamicTasking:DisplayCurrentMission(playerGroup)
     if foundMission then
         local playersString = "None"
         if #foundMission.assignedPlayers > 0 then
-             playersString = table.concat(foundMission.assignedPlayers, "\n  - ")
-             playersString = "\n  - " .. playersString
+            playersString = table.concat(foundMission.assignedPlayers, "\n  - ")
+            playersString = "\n  - " .. playersString
         end
         table.insert(messageParts, "--- MY CURRENT MISSION ---\n")
         table.insert(messageParts, "----------------------------------------\n")
@@ -530,21 +578,24 @@ function DynamicTasking:DisplayCurrentMission(playerGroup)
         table.insert(messageParts, string.format("TASK: %s\n", foundMission.type))
         table.insert(messageParts, string.format("Zone: %s\n", foundMission.zoneName))
         table.insert(messageParts, string.format("Description:\n  %s\n", foundMission.description))
-        table.insert(messageParts, string.format("Reward: %s XP", foundMission.xpValue))
-        
+        table.insert(messageParts, string.format("Reward: %s XP\n", foundMission.xpValue))
+
         -- Add progress display based on mission type
         if foundMission.type == "CAS" then
-            table.insert(messageParts, string.format("Progress: %d/%d units destroyed.\n", (foundMission.killCount or 0), foundMission.requiredKills))
+            table.insert(messageParts,
+                string.format("Progress: %d/%d units destroyed.\n", (foundMission.killCount or 0),
+                    foundMission.requiredKills))
         elseif foundMission.type == "SEAD" or foundMission.type == "STRIKE" or foundMission.type == "INTERCEPT" then
             if foundMission.targetObject and foundMission.targetObject:IsAlive() then
                 local currentCount = 0
                 if foundMission.targetObject.GetSize then -- It's a GROUP
                     currentCount = foundMission.targetObject:GetSize()
-                else -- It's a STATIC
+                else                                      -- It's a STATIC
                     currentCount = 1
                 end
                 local kills = (foundMission.initialUnitCount or 0) - currentCount
-                table.insert(messageParts, string.format("Progress: %d/%d units destroyed.\n", kills, foundMission.initialUnitCount))
+                table.insert(messageParts,
+                    string.format("Progress: %d/%d units destroyed.\n", kills, foundMission.initialUnitCount))
             else
                 table.insert(messageParts, "Progress: Target destroyed.\n")
             end
@@ -569,10 +620,12 @@ function DynamicTasking:OnUnitKilled(event)
     local killerObject = event.IniUnit
 
     local victimName = victimObject and victimObject:GetName() or "N/A"
-    local killerPlayerName = killerObject and (killerObject:GetPlayerName() or (killerObject:GetGroup() and killerObject:GetGroup():GetPlayerName())) or "N/A"
+    local killerPlayerName = killerObject and
+    (killerObject:GetPlayerName() or (killerObject:GetGroup() and killerObject:GetGroup():GetPlayerName())) or "N/A"
     local killerUnitName = killerObject and killerObject:GetName() or "N/A"
 
-    env.info(string.format("DynamicTasking:OnUnitKilled - Victim: %s, Killer: %s (Player: %s)", victimName, killerUnitName, killerPlayerName))
+    env.info(string.format("DynamicTasking:OnUnitKilled - Victim: %s, Killer: %s (Player: %s)", victimName,
+        killerUnitName, killerPlayerName))
 
     if not victimObject then
         env.info("DynamicTasking:OnUnitKilled: Victim object is nil. Exiting.")
@@ -584,9 +637,14 @@ function DynamicTasking:OnUnitKilled(event)
     if assignedMissionCode then
         local mission = DynamicTasking.ActiveMissions[assignedMissionCode]
         if mission and mission.type ~= "CAS" then
-            env.info(string.format("DynamicTasking:OnUnitKilled - Unit '%s' is a target for mission [%s - %s]. This is a non-CAS mission.", victimName, mission.type, mission.joinCode))
+            env.info(string.format(
+                "DynamicTasking:OnUnitKilled - Unit '%s' is a target for mission [%s - %s]. This is a non-CAS mission.",
+                victimName, mission.type, mission.joinCode))
             if mission.targetObject and mission.targetObject.CountAliveUnits then
-                env.info(string.format("DynamicTasking:OnUnitKilled - Mission '%s' target group '%s' current alive units: %d", mission.joinCode, mission.targetObject:GetName(), mission.targetObject:CountAliveUnits()))
+                env.info(string.format(
+                    "DynamicTasking:OnUnitKilled - Mission '%s' target group '%s' current alive units: %d",
+                    mission.joinCode,
+                    mission.targetObject:GetName(), mission.targetObject:CountAliveUnits()))
             end
         end
     end
@@ -594,7 +652,12 @@ function DynamicTasking:OnUnitKilled(event)
     local victimName = victimObject:GetName()
     if not victimName then return end
 
-    local killerPlayerName = killerObject:GetPlayerName()
+    local killerPlayerName = nil
+
+    if killerObject then
+        killerPlayerName = killerObject:GetPlayerName()
+    end
+
     if not killerPlayerName and killerObject:GetGroup() and killerObject:GetGroup():GetPlayerName() then
         killerPlayerName = killerObject:GetGroup():GetPlayerName()
     end
@@ -604,11 +667,11 @@ function DynamicTasking:OnUnitKilled(event)
             -- NEW: Check if the victim's name is in our target list for this mission.
             if mission.targetUnits and mission.targetUnits[victimName] then
                 env.info("OnUnitKilled: Victim " .. victimName .. " is a valid target for CAS mission " .. code)
-                
+
                 if not mission.killedUnits[victimName] then
                     mission.killCount = (mission.killCount or 0) + 1
                     mission.killedUnits[victimName] = true
-                    
+
                     local killerDisplayName = "an allied force" -- Default
                     if killerPlayerName then
                         killerDisplayName = killerPlayerName
@@ -628,40 +691,6 @@ function DynamicTasking:OnUnitKilled(event)
     end
 end
 
---- Event handler for weapon shots, to track bombs for runway attack missions.
-function DynamicTasking:OnWeaponShot(event)
-    local killerObject = event.IniUnit
-    if not killerObject then return end
-
-    local killerPlayerName = killerObject:GetPlayerName()
-    if not killerPlayerName then return end
-
-    local assignedMissionCode = DynamicTasking.PlayerAssignments[killerPlayerName]
-    if not assignedMissionCode then return end
-
-    local mission = DynamicTasking.ActiveMissions[assignedMissionCode]
-    if not mission or mission.type ~= "RUNWAY" then return end
-
-    local weapon = WEAPON:New(event.Weapon)
-    if weapon:IsBomb() then
-        env.info(string.format("DynamicTasking:OnWeaponShot - Tracking bomb for player %s for RUNWAY mission %s", killerPlayerName, mission.joinCode))
-        weapon:StartTrack()
-        weapon:SetFuncImpact(DynamicTasking.OnBombImpact, DynamicTasking, mission.joinCode)
-    end
-end
-
---- Callback for when a tracked bomb impacts.
-function DynamicTasking:OnBombImpact(weapon, missionCode)
-    local mission = DynamicTasking.ActiveMissions[missionCode]
-    if not mission or mission.type ~= "RUNWAY" then return end
-
-    local impactCoord = weapon:GetImpactCoordinate()
-    if mission.targetObject.zone:IsCoordinateInZone(impactCoord) then
-        mission.bombHits = (mission.bombHits or 0) + 1
-        env.info(string.format("DynamicTasking:OnBombImpact - Runway hit for mission %s! Total hits: %d/%d", mission.joinCode, mission.bombHits, mission.requiredKills))
-    end
-end
-
 --- REWRITTEN: Builds the F10 radio menu with organized sub-menus.
 function DynamicTasking:BuildRadioMenuForGroup(groupName)
     local playerGroup = GROUP:FindByName(groupName)
@@ -670,16 +699,16 @@ function DynamicTasking:BuildRadioMenuForGroup(groupName)
     if self.GroupMenus[groupID] then self.GroupMenus[groupID]:Remove() end
     local mainMenu = MENU_GROUP:New(playerGroup, "Dynamic Missions")
     self.GroupMenus[groupID] = mainMenu
-    
+
     -- 1. Create the "Show Missions" parent menu.
     local showMissionMenu = MENU_GROUP:New(playerGroup, "Show Active Missions", mainMenu)
-    
+
     -- 2. Find what types of missions are currently available.
     local availableTypes = {}
     for _, mission in pairs(self.ActiveMissions) do
         availableTypes[mission.type] = true
     end
-    
+
     -- 3. Create a sub-menu for each available type.
     if next(availableTypes) == nil then -- Check if availableTypes is empty
         MENU_GROUP:New(playerGroup, "No mission types available.", showMissionMenu)
@@ -687,36 +716,41 @@ function DynamicTasking:BuildRadioMenuForGroup(groupName)
         for type, _ in pairs(availableTypes) do
             local typeMenuText = string.format("%s Missions", type)
             -- The action calls our modified DisplayMissionList function with the specific type.
-            MENU_GROUP_COMMAND:New(playerGroup, typeMenuText, showMissionMenu, function() self:DisplayMissionList(playerGroup, type) end)
+            MENU_GROUP_COMMAND:New(playerGroup, typeMenuText, showMissionMenu,
+                function() self:DisplayMissionList(playerGroup, type) end)
         end
     end
-    
+
     -- 4. Create the "Join" menu as before.
-    local joinMissionMenu = MENU_GROUP:New(playerGroup, "Join Active Mission", mainMenu)    
+    local joinMissionMenu = MENU_GROUP:New(playerGroup, "Join Active Mission", mainMenu)
     self.GroupMenus[groupID].joinMenu = joinMissionMenu -- Store a reference to the join menu
 
     self:BuildJoinMissionPage(groupName, page)
 
     -- 5. Add the "My Current Mission" command.
-    MENU_GROUP_COMMAND:New(playerGroup, "My Current Mission", mainMenu, function() self:DisplayCurrentMission(playerGroup) end)
+    MENU_GROUP_COMMAND:New(playerGroup, "My Current Mission", mainMenu,
+        function() self:DisplayCurrentMission(playerGroup) end)
 
     -- 6. Add "Leave Mission" command if player is assigned to one
     local unitObject = playerGroup:GetUnit(1)
     if unitObject and unitObject:IsAlive() then
         local playerName = unitObject:GetPlayerName()
-        if self.PlayerAssignments then env.info("LEAVE MISSION: player assignment: " ..tostring(self.PlayerAssignments[playerName])) end
+        if self.PlayerAssignments then
+            env.info("LEAVE MISSION: player assignment: " ..
+                tostring(self.PlayerAssignments[playerName]))
+        end
         if playerName and self.PlayerAssignments and self.PlayerAssignments[playerName] then -- Check if self.PlayerAssignments is not nil
-            MENU_GROUP_COMMAND:New(playerGroup, "Leave Current Mission", mainMenu, function() self:LeaveMission(playerName, unitObject) end)
+            MENU_GROUP_COMMAND:New(playerGroup, "Leave Current Mission", mainMenu,
+                function() self:LeaveMission(playerName, unitObject) end)
         end
     else
         if not unitObject then env.info("LEAVE MISSION: UnitObj is nil") end
-        if unitObject then env.info("LEAVE MISSION: is unit alive: " ..unitObject:IsAlive()) end
+        if unitObject then env.info("LEAVE MISSION: is unit alive: " .. unitObject:IsAlive()) end
     end
 end
 
 --- Builds a specific page of the "Join Active Mission" menu.
 function DynamicTasking:BuildJoinMissionPage(groupName, page)
-
     -- If page is not provided, default to 1. This handles external calls that are not aware of pagination.
     page = page or 1
 
@@ -754,16 +788,18 @@ function DynamicTasking:BuildJoinMissionPage(groupName, page)
                 self:JoinMission(playerName, unitObject, mission)
             end
         end
-        MENU_GROUP_COMMAND:New(playerGroup, menuText, joinMissionMenu, action)    
+        MENU_GROUP_COMMAND:New(playerGroup, menuText, joinMissionMenu, action)
     end
 
     -- Add pagination controls
     if page > 1 then
-        MENU_GROUP_COMMAND:New(playerGroup, "< Previous Page", joinMissionMenu, function() self:BuildJoinMissionPage(groupName, page - 1) end)
+        MENU_GROUP_COMMAND:New(playerGroup, "< Previous Page", joinMissionMenu,
+            function() self:BuildJoinMissionPage(groupName, page - 1) end)
     end
 
     if endIndex < totalMissions then
-        MENU_GROUP_COMMAND:New(playerGroup, "Next Page >", joinMissionMenu, function() self:BuildJoinMissionPage(groupName, page + 1) end)
+        MENU_GROUP_COMMAND:New(playerGroup, "Next Page >", joinMissionMenu,
+            function() self:BuildJoinMissionPage(groupName, page + 1) end)
     end
 
     if totalMissions == 0 then
@@ -843,7 +879,8 @@ function DynamicTasking:OnPlayerLeaveUnit(event)
                         break
                     end
                 end
-                env.info(string.format("OnPlayerLeaveUnit: Removed %s from mission [%s - %s].", playerName, mission.type, mission.joinCode))
+                env.info(string.format("OnPlayerLeaveUnit: Removed %s from mission [%s - %s].", playerName, mission.type,
+                    mission.joinCode))
             end
             DynamicTasking.PlayerAssignments[playerName] = nil -- Clear player's overall assignment
             env.info(string.format("OnPlayerLeaveUnit: Cleared player assignment for %s.", playerName))
@@ -853,20 +890,22 @@ end
 
 --- Persistence Functions
 function DynamicTasking:LoadPersistentXP(mainState)
-    if mainState and mainState.PlayerXP then self.PlayerXP=mainState.PlayerXP; MESSAGE:New("Dynamic Tasking: Loaded persistent Player XP data.",15):ToAll() end
+    if mainState and mainState.PlayerXP then
+        self.PlayerXP = mainState.PlayerXP; MESSAGE:New("Dynamic Tasking: Loaded persistent Player XP data.", 15):ToAll()
+    end
 end
+
 function DynamicTasking:SavePersistentXP(stateToSave)
-    if stateToSave then stateToSave.PlayerXP=self.PlayerXP end; return stateToSave
+    if stateToSave then stateToSave.PlayerXP = self.PlayerXP end; return stateToSave
 end
 
 --- Main start function.
 function DynamicTasking:Start()
-    SCHEDULER:New(self, self.MissionMonitor, {}, 20, 15) -- Check missions every 15s, start after 20s
+    SCHEDULER:New(self, self.MissionMonitor, {}, 20, 15)                                -- Check missions every 15s, start after 20s
     SCHEDULER:New(self, self.UpdateAllPlayerMenus, {}, self.Config.MenuRefreshRate, 30) -- Refresh menus, start after 30s
-    _EVENTDISPATCHER:HandleEvent(EVENTS.Kill, self.OnUnitKilled, self) -- Register kill event handler
+    _EVENTDISPATCHER:HandleEvent(EVENTS.Kill, self.OnUnitKilled, self)                  -- Register kill event handler
     _EVENTDISPATCHER:HandleEvent(EVENTS.PlayerLeaveUnit, self.OnPlayerLeaveUnit, self)
-    _EVENTDISPATCHER:HandleEvent(EVENTS.Shot, self.OnWeaponShot, self)
-    
+
     MESSAGE:New("Dynamic Tasking Framework Initialized.", 15):ToAll()
 end
 
@@ -883,3 +922,230 @@ end
 -- -- local stateToSave = {}
 -- -- DynamicTasking:SavePersistentXP(stateToSave)
 -- -- UTILS.SaveState(stateToSave)
+
+
+
+
+---- TEST RUNWAY MISSION:
+RunwayHandler = nil
+RUNWAY_ZONE_COOLDOWN = {}
+runwayCooldown = 0
+runwayCompleted = false
+function DynamicTasking:generateRunwayStrikeMission()
+    if runwayMission or runwayTarget then return end
+    if timer.getTime() < runwayCooldown then return end
+    local cand, capCand = {}, {}
+    for _, z in ipairs(bc.zones) do
+        if z.side == 1 and z.active and not z.suspended and z.airbaseName and ZONE_CONNECTED_TO_BLUE[z.zone]
+            and (RUNWAY_ZONE_COOLDOWN[z.zone] or 0) < timer.getTime()
+        then
+            local hostile, capCnt = false, 0
+            for _, g in ipairs(z.groups or {}) do
+                if g.side == 1 and g.unitCategory == 0 then
+                    if g.mission == 'attack' or g.mission == 'patrol' then hostile = true end
+                    if g.MissionType == 'CAP' then capCnt = capCnt + 1 end
+                end
+            end
+            if hostile then
+                local ab = AIRBASE:FindByName(z.airbaseName)
+                if ab and ab:IsAirdrome() then
+                    local entry = { zone = z, airbase = ab }
+                    if capCnt > 2 then capCand[#capCand + 1] = entry else cand[#cand + 1] = entry end
+                end
+            end
+        end
+    end
+    cand = (#capCand > 0) and capCand or cand
+    do
+        local blueAnchors = {}
+        for _, bz in ipairs(bc.zones) do
+            if bz.side == 2 and bz.active then blueAnchors[#blueAnchors + 1] = bz.zone end
+        end
+        for _, e in ipairs(cand) do
+            local best = math.huge
+            local znB = e.zone.zone
+            for _, znA in ipairs(blueAnchors) do
+                local d = ZONE_DISTANCES[znA] and ZONE_DISTANCES[znA][znB] or math.huge
+                if d < best then best = d end
+            end
+            e.dist = best
+        end
+        table.sort(cand, function(a, b) return a.dist < b.dist end)
+        local rankBonus = { 5, 3, 0 }
+        for idx, e in ipairs(cand) do
+            local grpScore = 0
+            for _, g in ipairs(e.zone.groups or {}) do
+                if g.side == 1 and g.unitCategory == 0 then
+                    grpScore = grpScore + 2
+                    if g.MissionType == 'CAP' then grpScore = grpScore + 1 end
+                end
+            end
+            e.score = grpScore + (rankBonus[math.min(idx, 3)] or 0)
+        end
+        table.sort(cand, function(a, b)
+            if a.score == b.score then return a.dist < b.dist else return a.score > b.score end
+        end)
+    end
+    if #cand == 0 then
+        local blueAnchors = {}
+        for _, bz in ipairs(bc.zones) do
+            if bz.side == 2 and bz.active then blueAnchors[#blueAnchors + 1] = bz.zone end
+        end
+        for _, z in ipairs(bc.zones) do
+            if z.side == 1 and z.active and z.airbaseName and
+                (RUNWAY_ZONE_COOLDOWN[z.zone] or 0) < timer.getTime() then
+                local hostile = false
+                if z.groups then
+                    for _, g in ipairs(z.groups) do
+                        if g.side == 1 and g.unitCategory == 0 and (g.mission == 'attack' or g.mission == 'patrol') then
+                            hostile = true
+                            break
+                        end
+                    end
+                end
+                if hostile then
+                    local bestdist = math.huge
+                    local znB = z.zone
+                    for _, znA in ipairs(blueAnchors) do
+                        local d = ZONE_DISTANCES[znA] and ZONE_DISTANCES[znA][znB] or math.huge
+                        if d < bestdist then bestdist = d end
+                    end
+                    if bestdist <= 60 * 1852 then
+                        local ab = AIRBASE:FindByName(z.airbaseName)
+                        if ab and ab:IsAirdrome() then
+                            local score = 0
+                            for _, g in ipairs(z.groups or {}) do
+                                if g.side == 1 and g.unitCategory == 0 then
+                                    score = score + 2
+                                    if g.MissionType == "CAP" then score = score + 1 end
+                                end
+                            end
+                            cand[#cand + 1] = { zone = z, airbase = ab, dist = bestdist, score = score }
+                        end
+                    end
+                end
+            end
+        end
+        table.sort(cand, function(a, b) return a.dist < b.dist end)
+        local rankBonus = { 5, 3, 0 }
+        for i, e in ipairs(cand) do
+            e.score = (e.score or 0) + (rankBonus[i] or 0)
+        end
+        table.sort(cand, function(a, b) return a.score > b.score end)
+    end
+    for i = 1, math.min(3, #cand) do
+        local e = cand[i]
+        --env.info(string.format("RUNWAY-DBG: option %d  %s  dist=%.0f  score=%d",i,e.zone.zone,e.dist,e.score))
+    end
+
+    if #cand == 0 then return end
+    if not cand[1] then return end
+    local ab = cand[1].airbase
+    local hitZones = {}
+    runwayNames = {}
+    local done = {}
+
+    do
+        local seen = {}
+        local runwaytgt = ab:GetRunways() or {}
+        for _, r in ipairs(runwaytgt) do
+            if r.zone then
+                local hdg = (r.heading or 0) % 360
+                local num = math.floor((hdg + 5) / 10) % 36; if num == 0 then num = 36 end
+                local side = r.isLeft == nil and '' or (r.isLeft and 'L' or 'R')
+                if num > 18 then
+                    num = num - 18; if side == 'L' then side = 'R' elseif side == 'R' then side = 'L' end
+                end
+                local id = (num < 10 and '0' or '') .. tostring(num) .. side
+                if not seen[id] then
+                    hitZones[#hitZones + 1] = r.zone
+                    runwayNames[#runwayNames + 1] = id
+                    seen[id] = true
+                end
+            end
+        end
+    end
+    if #hitZones == 0 then return end
+
+    hits, need = 0, #hitZones
+    runwayTarget = ab:GetName()
+    runwayTargetZone = cand[1].zone.zone
+    runwayMission = "Active"
+    runwayCompleted = false
+    RunwayHandler = EVENT:New()
+    function RunwayHandler:OnEventShot(EventData)
+        if not (EventData and EventData.IniUnit and EventData.weapon and EventData.IniPlayerName) then return end
+        local wp = WEAPON:New(EventData.weapon)
+        if not wp:IsBomb() then return end
+        env.info('RUNWAY-DBG: ' .. EventData.IniPlayerName .. ' dropped ' .. wp:GetTypeName() .. ' on ' ..
+        runwayTargetZone)
+        local pilot = EventData.IniPlayerName or 'Unknown hero'
+        local playerUnit = EventData.IniUnit
+        wp:SetFuncImpact(function(self)
+            local p = self:GetImpactVec3()
+            if not p or not runwayMission or not runwayTargetZone then
+                self:StopTrack()
+                return
+            end
+            for i, z in ipairs(hitZones) do
+                local cp = COORDINATE:NewFromVec3(p)
+                if not done[z] and (z:IsVec3InZone(p) or z:GetCoordinate():Get2DDistance(cp) <= 10) then
+                    env.info('RUNWAY-DBG: bomb hit ' .. z:GetName())
+                    done[z] = true
+                    hits = hits + 1
+                    if #runwayNames > 1 then MESSAGE:New(runwayNames[i] .. ' HIT!', 10, ''):ToUnit(playerUnit) end
+                    if hits >= need then
+                        self:StopTrack()
+                        bomberName = pilot
+                        runwayCompleted = true
+                        if bc.playerContributions[2][bomberName] ~= nil then
+                            bc.playerContributions[2][bomberName] = (bc.playerContributions[2][bomberName] or 0) + 100
+                            bc:addTempStat(bomberName, 'Bomb runway', 1)
+                        end
+
+                        for code, mission in pairs(DynamicTasking.ActiveMissions) do
+                            if mission.type == "RUNWAY" then
+                                mission.bombHits = mission.requiredKills
+                            end
+                        end
+
+                        env.info('RUNWAY-DBG: ' .. bomberName .. ' completed runway strike mission at ' ..
+                            runwayTargetZone)
+                        if RunwayHandler then
+                            RunwayHandler:UnHandleEvent(EVENTS.Shot)
+                            RunwayHandler = nil
+                            runwayMission = nil
+                        end
+                    end
+                    break
+                end
+            end
+        end)
+        wp:StartTrack()
+    end
+
+    RunwayHandler:HandleEvent(EVENTS.Shot)
+
+    local runways = ab:GetRunways()
+    local runway = nil
+    if runways[0] ~= nil then
+        runway = runways[0]
+    else
+        runway = runways[1]
+    end
+
+    local runwayName = nil
+    if runwayNames[0] ~= nil then
+        runwayName = runwayNames[0]
+    else
+        runwayName = runwayNames[1]
+    end
+
+    if #runwayNames > 1 then
+        self:CreateMission("RUNWAY", runway, "Destroy all runways at " .. runwayTargetZone, self.Config.XP_RUNWAY,
+            #runwayNames, runwayTargetZone)
+    else
+        self:CreateMission("RUNWAY", runway, "Destroy runway " .. runwayName .. " at " .. runwayTargetZone,
+            self.Config.XP_RUNWAY, #runwayNames, runwayTargetZone)
+    end
+end

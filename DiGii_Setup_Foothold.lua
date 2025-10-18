@@ -1173,6 +1173,14 @@ local HuntNumber = SplashDamage and math.random(8,15) or math.random(6,15)
 bc:initHunter(HuntNumber)
 SCHEDULER:New(nil, function() bc:_buildHunterBaseList() end, {}, 1)
 
+SCHEDULER:New(nil, function() spawnAwacs(1,nil,10) end, {}, 3)
+SCHEDULER:New(nil, function() spawnAwacs(2,nil,10) end, {}, 4)
+
+AWACS_CFG = {
+    [1] = { alt=30000, speed=350, hdg=270, leg=15, sep=150 }, -- red
+    [2] = { alt=30000, speed=350, hdg=270, leg=15, sep=60 }   -- blue
+}
+
 GlobalSettings.autoSuspendNmBlue = 100   		-- suspend blue zones deeper than this nm
 GlobalSettings.autoSuspendNmRed = 120   		-- suspend red zones deeper than this nm
 
@@ -1214,44 +1222,7 @@ function generateAttackMission()
 
     -- Attempt to generate a Runway Attack mission
     do
-        -- Define all possible enemy airbases
-        local runwayAttackCandidates = { "Frankfurt", "Luneburg", "Bremen", "Fassberg", "Northeim", "Hannover", "Braunschweig", "Gutersloh", "Obermehler_Schlotheim", "Fritzlar" }
-        local validRunwayTargets = {}
-
-        -- Find frontline zones (where blue and red zones are connected)
-        local frontlineZones = {}
-        for _, connection in ipairs(bc.connections) do
-            local fromZone = bc:getZoneByName(connection.from)
-            local toZone = bc:getZoneByName(connection.to)
-            if fromZone and toZone and fromZone.side ~= toZone.side and fromZone.side ~= 0 and toZone.side ~= 0 then
-                table.insert(frontlineZones, fromZone.side == 2 and fromZone or toZone)
-            end
-        end
-
-        -- Only proceed if we have a frontline
-        if #frontlineZones > 0 then
-            -- Filter runway candidates to be RED controlled and near the frontline
-            for _, airbaseName in ipairs(runwayAttackCandidates) do
-                local zone = bc:getZoneByName(airbaseName)
-                if zone and zone.side == 1 then -- Check if the airbase zone is RED
-                    local airbaseCoord = ZONE:FindByName(zone.zone):GetCoordinate() -- Use the already fetched zone object
-                    for _, frontlineZone in ipairs(frontlineZones) do
-                        if airbaseCoord:Get2DDistance(ZONE:FindByName(frontlineZone.zone):GetCoordinate()) < 150000 then -- 150km from frontline
-                            table.insert(validRunwayTargets, airbaseName)
-                            break -- Add only once and move to the next candidate
-                        end
-                    end
-                end
-            end
-        end
-
-        if #validRunwayTargets > 0 then
-            local targetAirbaseName = validRunwayTargets[math.random(1, #validRunwayTargets)]
-            -- The GenerateRunwayAttackMission function now handles the logic to prevent duplicates.
-            if DynamicTasking:GenerateRunwayAttackMission(targetAirbaseName, 3) then
-                missionGenerated = true
-            end
-        end
+       DynamicTasking:generateRunwayStrikeMission()
     end
 
     return missionGenerated

@@ -26,7 +26,7 @@ local AirbossStennis=AIRBOSS:New("USS Abraham Lincoln")
 
 AirbossStennis:SetTACAN(73, "X", "LCN")
 
-AirbossStennis:EnableSRS("C:\\Program Files\\DCS-SimpleRadio-Standalone\\EternalAudio", 5002, "en-US", "male", "en-US-Wavenet-J", "C:\\Program Files\\DCS-SimpleRadio-Standalone\\googlekey.json")
+AirbossStennis:EnableSRS("C:\\Program Files\\DCS-SimpleRadio-Standalone\\ExternalAudio", 5002, "en-US", "male", "en-US-Wavenet-J", "C:\\Program Files\\DCS-SimpleRadio-Standalone\\googlekey.json")
 
 -- Add recovery windows:
 -- Case I from 6 to 10 am.
