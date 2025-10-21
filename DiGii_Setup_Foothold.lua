@@ -649,6 +649,47 @@ function (sender, params)
 end)
 
 ------
+bc:registerShopItem('dynamicarco', 'Dynamic Tanker (Drogue)', 0, function(sender)
+    if ArcoActive then
+        return 'Arco is still airborne'
+    end
+		if ArcoParentMenu then
+		return 'Choose spawn zone from F10 menu'
+	end
+    buildArcoMenu()
+	trigger.action.outTextForCoalition(2, 'Tanker (Drogue) is requested. Select spawn zone.', 10)
+    return
+end,
+function (sender, params)
+    if ArcoActive then
+        return 'Arco is still airborne'
+    end
+    buildArcoMenu()
+
+	trigger.action.outTextForCoalition(2, 'Tanker (Drogue) is requested. Select spawn zone.', 10)
+    return
+end)
+
+bc:registerShopItem('dynamictexaco', 'Dynamic Tanker (Boom)', 0, function(sender)
+    if TexacoActive then
+        return 'Texaco is still airborne'
+    end
+		if TexacoParentMenu then
+		return 'Choose spawn zone from F10 menu'
+	end
+    buildTexacoMenu()
+	trigger.action.outTextForCoalition(2, 'Tanker (Boom) is requested. Select spawn zone.', 10)
+    return
+end,
+function (sender, params)
+    if TexacoActive then
+        return 'Texaco is still airborne'
+    end
+    buildTexacoMenu()
+
+	trigger.action.outTextForCoalition(2, 'Tanker (Boom) is requested. Select spawn zone.', 10)
+    return
+end)
 
 bc:registerShopItem('dynamiccas', 'Dynamic CAS', 500,
 function(sender)
@@ -1120,6 +1161,8 @@ function(sender,params)
 end)
 --end of menu
 
+bc:addShopItem(2, 'dynamicarco', -1, 8, 3) -- Navy tanker
+bc:addShopItem(2, 'dynamictexaco', -1, 9, 3) -- Airforce tanker
 bc:addShopItem(2, 'capture', -1)
 bc:addShopItem(2, 'dynamiccap', -1)
 bc:addShopItem(2, 'dynamicsead', -1)
@@ -1153,6 +1196,9 @@ supplyZones = {
 	'Luabach_FARP',
 	'Frankfurt'
 }
+
+DIGIIATC:Start()
+DIGIIAIRBOSS:Start()
 
 lc = LogisticCommander:new({battleCommander = bc, supplyZones = supplyZones})
 lc:init()

@@ -1,10 +1,8 @@
 # TODO
 
-1. Update @WelcomeMessage_Caucasus.lua to newest version and change it to match germany
+1. Update Dynamic missions to use other Menu system (`sub1 = MENU_GROUP:New(self.group, "More",  self.menu.atc.root)`)
 
 2. Check all AI missoins 
-
-3. update atis freq
 
 99. Get my sanity back
 
