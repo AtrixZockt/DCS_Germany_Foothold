@@ -2,6 +2,7 @@
 DIGIIATC = {}
 
 atisHamburg=ATIS:New("Hamburg", 126.950, radio.modulation.AM)
+atisHamburg:SetTACAN(13)
 atisHamburg:SetRadioRelayUnitName("RR Hamburg")
 atisHamburg:Start()
 
@@ -61,6 +62,11 @@ function DIGIIATC:Start()
     Hamburg:SetSRSPilot('male', 'en-GB', "en-US-Wavenet-I")
     Hamburg:SetATIS(atisHamburg)
     Hamburg:Start()
+
+    local HamburgTacanUnit = UNIT:FindByName("HamburgTacan")
+    local HamburgTacan = HamburgTacanUnit:GetBeacon()
+    -- Activate TACAN beacon on channel 13X
+    HamburgTacan:ActivateTACAN(13, "X", "Hamburg", true)
 
     local Bremen2 = AIRBASE:FindByName(AIRBASE.GermanyCW.Bremen)
     Bremen2:SetRadioSilentMode(true)

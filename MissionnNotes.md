@@ -2,12 +2,29 @@
 
 1. Update Dynamic missions to use other Menu system (`sub1 = MENU_GROUP:New(self.group, "More",  self.menu.atc.root)`)
 
-2. Check all AI missoins 
+2. reduce CAP per player count
+
+3. Rework A2A and SEAD missions
+
+4. Check carriers (Welcome caucasus line 532)
+
+5. Add custom kneeboard
 
 99. Get my sanity back
 
 
 # Notes
+
+```Log
+2025-10-24 02:48:32.998 INFO    SCRIPTING (Main): Error in timer function: [string "l10n/DEFAULT/Moose.lua"]:145406: attempt to perform arithmetic on a nil value
+2025-10-24 02:48:32.998 INFO    SCRIPTING (Main): stack traceback:
+	[string "l10n/DEFAULT/Moose.lua"]:12062: in function <[string "l10n/DEFAULT/Moose.lua"]:12059>
+	[string "l10n/DEFAULT/Moose.lua"]:145406: in function <[string "l10n/DEFAULT/Moose.lua"]:145386>
+	(tail call): ?
+	[C]: in function 'xpcall'
+	[string "l10n/DEFAULT/Moose.lua"]:12115: in function <[string "l10n/DEFAULT/Moose.lua"]:12051>
+
+```
 
 
 ## ZC moose

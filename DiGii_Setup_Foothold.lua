@@ -140,7 +140,7 @@ upgrades = {
 	},
 	Hidden1Group = {
 		blue = {},
-		red = {'HQ Fixed', 'Red EWR Fixed 1', 'Red EWR Fixed 3', 'Red EWR Fixed 2', 'Red EWR 4 Fixed'}
+		red = {'HQ Fixed', 'Red EWR Fixed 1', 'Red EWR Fixed 2', 'Red EWR 4 Fixed'}
 	}
 }
 
@@ -1198,7 +1198,6 @@ supplyZones = {
 }
 
 DIGIIATC:Start()
-DIGIIAIRBOSS:Start()
 
 lc = LogisticCommander:new({battleCommander = bc, supplyZones = supplyZones})
 lc:init()
